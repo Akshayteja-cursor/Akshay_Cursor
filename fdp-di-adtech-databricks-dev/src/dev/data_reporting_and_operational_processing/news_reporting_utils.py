@@ -5,9 +5,7 @@ imported by both the notebook and the unit-test suite.
 """
 from __future__ import annotations
 
-import re
 from datetime import datetime, timedelta
-from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -38,11 +36,6 @@ REPORT_COLUMNS: list[str] = [
     'Current First Party OSI', 'Current Third Party OSI',
     'Total Error Count', 'Total Error Rate',
 ]
-
-# AOS extends a line's flight by adding a new order line named
-# '<base line name> - Extension' that carries the additional quantity and the
-# extended flight window.
-EXTENSION_SUFFIX_PATTERN = re.compile(r'\s*-\s*extension(?:\s*-?\s*\d+)?\s*$', re.IGNORECASE)
 
 # ---------------------------------------------------------------------------
 # Metric helpers
@@ -210,97 +203,6 @@ def format_podcast_pacing(feed_df: pd.DataFrame, instance_label: str) -> pd.Data
     df['Clicks (3rd Party)'] = 0
     df['Total Error Count'] = 0
     return df
-
-
-def base_line_item_name(line_item_name: Any) -> Any:
-    """Strip a trailing '- Extension' / '- Extension 2' suffix from a line item name."""
-    if not isinstance(line_item_name, str):
-        return line_item_name
-    return EXTENSION_SUFFIX_PATTERN.sub('', line_item_name).strip()
-
-
-def combine_extension_lines(df: pd.DataFrame) -> pd.DataFrame:
-    """Roll AOS '- Extension' order lines up into their base line.
-
-    Operates on the output of format_podcast_pacing. Rows are grouped by
-    (Instance, Order, base line item name). Within each group:
-
-    * Delivered impressions are summed across ALL rows (each row is a
-      distinct delivering campaign / order line).
-    * Goal / Contracted Quantity are summed across DISTINCT line
-      contributions only (distinct original name + flight window + rate +
-      quantities). This supports both shapes seen in the gold tables:
-        - partial, order-line-grain rows (base 1,900,000 plus
-          '- Extension' 100,000) are summed to the deal total, and
-        - duplicate rows that already repeat the rolled-up deal-line
-          totals (one row per delivering campaign, each carrying
-          2,000,000) are counted once instead of being double-counted.
-    * The flight window spans the earliest start to the latest end and
-      descriptive fields come from the earliest-starting (base) line.
-
-    UAT 07/28/2026 example (Chevron / 26-27 / Scatter / News Digital / A250):
-    'DIO - AUD - FNC - Mid - Hourly Update' plus
-    'DIO - AUD - FNC - Mid - Hourly Update - Extension' must report as one
-    row with Contracted Quantity 2,000,000 and Goal Quantity 2,100,000
-    running 06/01/2026 - 08/14/2026.
-    """
-    if df.empty:
-        return df
-
-    df = df.copy()
-    df['_original_line_item_name'] = df['Line Item Name']
-    df['Line Item Name'] = df['Line Item Name'].map(base_line_item_name)
-
-    named = df[df['Line Item Name'].notna()]
-    unnamed = df[df['Line Item Name'].isna()].drop(columns=['_original_line_item_name'])
-    if named.empty:
-        return df.drop(columns=['_original_line_item_name'])
-
-    named = named.sort_values('Line Item Start Date', na_position='last')
-    group_keys = ['Instance', 'Order', 'Line Item Name']
-
-    # Delivery is additive across every row in the group.
-    delivered = named.groupby(group_keys, dropna=False, sort=False, as_index=False).agg(
-        {
-            'Ad Server Impressions': 'sum',
-            'Impressions (3rd Party)': 'sum',
-            'Clicks (3rd Party)': 'sum',
-            'Total Error Count': 'sum',
-        },
-    )
-
-    # Quantities are summed over distinct contributions only, so rows that
-    # repeat the same rolled-up deal-line totals are not double-counted.
-    contributions = named.drop_duplicates(
-        subset=group_keys + [
-            '_original_line_item_name',
-            'Line Item Start Date',
-            'Line Item End Date',
-            'Rate',
-            'Goal Quantity',
-            'Contracted Quantity',
-        ],
-    )
-    combined = contributions.groupby(group_keys, dropna=False, sort=False, as_index=False).agg(
-        {
-            'Advertiser': 'first',
-            'Line Item Start Date': 'min',
-            'Line Item End Date': 'max',
-            'Rate': 'first',
-            'Goal Quantity': 'sum',
-            'Contracted Quantity': 'sum',
-            'Delivery Indicator': 'first',
-            'Salesperson': 'first',
-        },
-    )
-
-    combined = combined.merge(delivered, on=group_keys, how='left')
-    combined['Quantity'] = combined['Goal Quantity']
-    combined['Total Impressions'] = combined['Ad Server Impressions']
-
-    if unnamed.empty:
-        return combined
-    return pd.concat([combined, unnamed], ignore_index=True)
 
 
 def format_news_pacing(df: pd.DataFrame, report_date: datetime) -> pd.DataFrame:

@@ -11,12 +11,13 @@
 -- match the table-derived expected output at the report-generation grain.
 --
 -- UAT 07/28/2026 expectations baked into the expected output:
---   * AOS '- Extension' order lines roll up into their base line
---     (quantities and delivery summed, flight window = base start to
---     extension end, descriptive fields from the earliest-starting line).
 --   * Both OSI columns (R & S) carry the Ad Ops podcast formula:
 --     (delivered-to-date / contracted) / (days live / total flight days).
 --   * The Megaphone tab is labeled 'Spotify'.
+--   * Goal/Contracted Quantity come straight from the deal-line grain of the
+--     gold tables (AOS already rolls extension order lines into the deal
+--     line, e.g. deal 569046 carries quantity 2,000,000 / production
+--     2,100,000 with the extended flight 06/01 - 08/14).
 
 CREATE OR REPLACE TEMP VIEW podcast_report_mismatches AS
 WITH params AS (
@@ -83,8 +84,6 @@ typed_source AS (
         advertiser,
         order_name,
         line_item_name,
-        -- Base name with any trailing '- Extension' / '- Extension 2' stripped
-        TRIM(REGEXP_REPLACE(line_item_name, '(?i)\\s*-\\s*extension(\\s*-?\\s*[0-9]+)?\\s*$', '')) AS base_line_item_name,
         TRY_CAST(line_item_start_ts AS TIMESTAMP) AS line_item_start_ts,
         TRY_CAST(line_item_end_ts AS TIMESTAMP)   AS line_item_end_ts,
         COALESCE(TRY_CAST(rate_raw AS DOUBLE), 0.0)                AS rate,
@@ -93,105 +92,6 @@ typed_source AS (
         salesperson,
         COALESCE(TRY_CAST(delivered_raw AS DOUBLE), 0.0)            AS ad_server_impressions
     FROM source_agg
-),
--- Roll AOS '- Extension' order lines up into their base line, matching
--- combine_extension_lines in ad_operations_news_lifetime_data_load:
---   * delivered impressions sum across ALL rows of the logical line;
---   * Goal/Contracted Quantity sum across DISTINCT contributions only
---     (distinct original name + flight window + rate + quantities), so rows
---     that already repeat the rolled-up deal-line totals are counted once.
-delivered_by_line AS (
-    SELECT
-        instance,
-        order_name,
-        base_line_item_name,
-        SUM(ad_server_impressions) AS ad_server_impressions
-    FROM typed_source
-    WHERE line_item_name IS NOT NULL
-    GROUP BY instance, order_name, base_line_item_name
-),
-line_contributions AS (
-    SELECT
-        instance,
-        order_name,
-        base_line_item_name,
-        line_item_name,
-        line_item_start_ts,
-        line_item_end_ts,
-        rate,
-        goal_quantity,
-        contracted_quantity
-    FROM typed_source
-    WHERE line_item_name IS NOT NULL
-    GROUP BY instance, order_name, base_line_item_name, line_item_name,
-             line_item_start_ts, line_item_end_ts, rate,
-             goal_quantity, contracted_quantity
-),
-combined_named AS (
-    SELECT
-        instance,
-        order_name,
-        base_line_item_name,
-        MIN(line_item_start_ts)          AS line_item_start_ts,
-        MAX(line_item_end_ts)            AS line_item_end_ts,
-        MIN_BY(rate, line_item_start_ts) AS rate,
-        SUM(goal_quantity)               AS goal_quantity,
-        SUM(contracted_quantity)         AS contracted_quantity
-    FROM line_contributions
-    GROUP BY instance, order_name, base_line_item_name
-),
-line_descriptives AS (
-    SELECT
-        instance,
-        order_name,
-        base_line_item_name,
-        MIN_BY(advertiser, line_item_start_ts)  AS advertiser,
-        MIN_BY(salesperson, line_item_start_ts) AS salesperson
-    FROM typed_source
-    WHERE line_item_name IS NOT NULL
-    GROUP BY instance, order_name, base_line_item_name
-),
-combined_source AS (
-    SELECT
-        cn.instance,
-        d.advertiser,
-        cn.order_name,
-        cn.base_line_item_name AS line_item_name,
-        cn.line_item_start_ts,
-        cn.line_item_end_ts,
-        cn.rate,
-        cn.goal_quantity,
-        cn.contracted_quantity,
-        d.salesperson,
-        del.ad_server_impressions
-    FROM combined_named cn
-    JOIN line_descriptives d
-      ON  cn.instance <=> d.instance
-      AND cn.order_name <=> d.order_name
-      AND cn.base_line_item_name <=> d.base_line_item_name
-    JOIN delivered_by_line del
-      ON  cn.instance <=> del.instance
-      AND cn.order_name <=> del.order_name
-      AND cn.base_line_item_name <=> del.base_line_item_name
-
-    UNION ALL
-
-    -- Unnamed lines (failed OMS join) pass through at the order-line grain,
-    -- mirroring the pandas implementation.
-    SELECT
-        instance,
-        advertiser,
-        order_name,
-        line_item_name,
-        line_item_start_ts,
-        line_item_end_ts,
-        rate,
-        goal_quantity,
-        contracted_quantity,
-        salesperson,
-        ad_server_impressions
-    FROM typed_source
-    WHERE line_item_name IS NULL
 ),
 expected_raw AS (
     SELECT
@@ -247,7 +147,7 @@ expected_raw AS (
         END AS current_third_party_osi,
         CAST(0.0 AS DOUBLE) AS total_error_count,
         CAST(0.0 AS DOUBLE) AS total_error_rate
-    FROM combined_source s
+    FROM typed_source s
     CROSS JOIN params p
 ),
 actual_raw AS (

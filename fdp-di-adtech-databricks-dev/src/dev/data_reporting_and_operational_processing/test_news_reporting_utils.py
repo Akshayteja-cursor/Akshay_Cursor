@@ -28,9 +28,7 @@ sys.path.insert(
 from news_reporting_utils import (  # noqa: E402
     PODCAST_COLUMN_MAP,
     REPORT_COLUMNS,
-    base_line_item_name,
     calculate_metrics,
-    combine_extension_lines,
     format_podcast_pacing,
     metrics_calculaition,
     osi,
@@ -42,7 +40,9 @@ from news_reporting_utils import (  # noqa: E402
 # ---------------------------------------------------------------------------
 
 def _feed_row(**overrides) -> pd.DataFrame:
-    """One-row DataFrame matching the gold Amperwave / Megaphone schema."""
+    """One-row DataFrame matching the gold Amperwave / Megaphone schema
+    (already aggregated to one row per deal_line_item_id, like the
+    notebook's Spark groupBy)."""
     defaults = {
         'advertiser_name': 'Test Advertiser',
         'deal_name': 'Test Deal',
@@ -256,232 +256,6 @@ class TestPodcastOsi:
 
 
 # ---------------------------------------------------------------------------
-# base_line_item_name / combine_extension_lines  (UAT 07/28/2026)
-# ---------------------------------------------------------------------------
-
-class TestBaseLineItemName:
-
-    def test_strips_extension_suffix(self):
-        assert base_line_item_name('DIO - AUD - FNC - Mid - Hourly Update - Extension') == \
-            'DIO - AUD - FNC - Mid - Hourly Update'
-
-    def test_strips_numbered_extension_suffix(self):
-        assert base_line_item_name('DIO - AUD - FNC - Pre/Mid - Rundown - Extension 2') == \
-            'DIO - AUD - FNC - Pre/Mid - Rundown'
-
-    def test_case_insensitive(self):
-        assert base_line_item_name('Some Line - EXTENSION') == 'Some Line'
-
-    def test_name_without_suffix_unchanged(self):
-        assert base_line_item_name('DIO - AUD - FNC - Mid - Hourly Update') == \
-            'DIO - AUD - FNC - Mid - Hourly Update'
-
-    def test_extension_mid_name_unchanged(self):
-        assert base_line_item_name('DIO - Extension Cord Ads - Mid') == \
-            'DIO - Extension Cord Ads - Mid'
-
-    def test_extension_without_dash_separator_unchanged(self):
-        assert base_line_item_name('Homepage Extension') == 'Homepage Extension'
-
-    def test_non_string_passthrough(self):
-        assert base_line_item_name(None) is None
-        assert pd.isna(base_line_item_name(np.nan))
-
-
-class TestCombineExtensionLines:
-    """AOS extension order lines roll up into their base line."""
-
-    CHEVRON_ORDER = 'Chevron / 26-27 / Scatter / News Digital / A250'
-
-    def _chevron_feed(self) -> pd.DataFrame:
-        """The four AOS order lines from the UAT feedback (order 14807 / deal 263391)."""
-        rows = [
-            # base lines (06/01 - 08/02 after modification)
-            dict(deal_line_item_name='DIO - AUD - FNC - Pre/Mid - Rundown',
-                 deal_line_item_start_date='2026-06-01', deal_line_item_end_date='2026-08-02',
-                 quantity='950000', production_quantity='997500', delivered_impressions='600000'),
-            dict(deal_line_item_name='DIO - AUD - FNC - Mid - Hourly Update',
-                 deal_line_item_start_date='2026-06-01', deal_line_item_end_date='2026-08-02',
-                 quantity='1900000', production_quantity='1995000', delivered_impressions='1200000'),
-            # extension lines (08/04 - 08/14)
-            dict(deal_line_item_name='DIO - AUD - FNC - Mid - Hourly Update - Extension',
-                 deal_line_item_start_date='2026-08-04', deal_line_item_end_date='2026-08-14',
-                 quantity='100000', production_quantity='105000', delivered_impressions='0'),
-            dict(deal_line_item_name='DIO - AUD - FNC - Pre/Mid - Rundown - Extension',
-                 deal_line_item_start_date='2026-08-04', deal_line_item_end_date='2026-08-14',
-                 quantity='50000', production_quantity='52500', delivered_impressions='0'),
-        ]
-        frames = [
-            _feed_row(
-                advertiser_name='Chevron',
-                deal_name=self.CHEVRON_ORDER,
-                net_unit_cost_amt='20',
-                **row,
-            )
-            for row in rows
-        ]
-        return pd.concat(frames, ignore_index=True)
-
-    def _combined_chevron(self) -> pd.DataFrame:
-        formatted = format_podcast_pacing(self._chevron_feed(), 'Spotify')
-        return combine_extension_lines(formatted)
-
-    def test_four_lines_collapse_to_two(self):
-        assert len(self._combined_chevron()) == 2
-
-    def test_hourly_update_quantities_match_uat_expectation(self):
-        result = self._combined_chevron()
-        row = result[result['Line Item Name'] == 'DIO - AUD - FNC - Mid - Hourly Update'].iloc[0]
-        assert row['Goal Quantity'] == 2_100_000
-        assert row['Contracted Quantity'] == 2_000_000
-
-    def test_rundown_quantities_match_uat_expectation(self):
-        result = self._combined_chevron()
-        row = result[result['Line Item Name'] == 'DIO - AUD - FNC - Pre/Mid - Rundown'].iloc[0]
-        assert row['Goal Quantity'] == 1_050_000
-        assert row['Contracted Quantity'] == 1_000_000
-
-    def test_flight_window_spans_base_start_to_extension_end(self):
-        result = self._combined_chevron()
-        for _, row in result.iterrows():
-            assert row['Line Item Start Date'] == pd.Timestamp('2026-06-01')
-            assert row['Line Item End Date'] == pd.Timestamp('2026-08-14')
-
-    def test_delivered_impressions_are_summed(self):
-        result = self._combined_chevron()
-        row = result[result['Line Item Name'] == 'DIO - AUD - FNC - Mid - Hourly Update'].iloc[0]
-        assert row['Ad Server Impressions'] == 1_200_000
-        assert row['Total Impressions'] == 1_200_000
-
-    def test_quantity_recomputed_from_merged_goal(self):
-        result = self._combined_chevron()
-        assert (result['Quantity'] == result['Goal Quantity']).all()
-
-    def test_rate_taken_from_base_line(self):
-        feed = self._chevron_feed()
-        # Give the extension a different rate: the base (earliest start) must win.
-        feed.loc[feed['deal_line_item_name'].str.endswith('Extension'), 'net_unit_cost_amt'] = '25'
-        result = combine_extension_lines(format_podcast_pacing(feed, 'Spotify'))
-        assert (result['Rate'] == 20).all()
-
-    def test_lines_without_extension_pass_through(self):
-        formatted = format_podcast_pacing(_feed_row(), 'Amperwave')
-        result = combine_extension_lines(formatted)
-        assert len(result) == 1
-        assert result['Goal Quantity'].iloc[0] == 1_000_000
-        assert result['Contracted Quantity'].iloc[0] == 900_000
-
-    def test_same_line_name_in_different_orders_not_merged(self):
-        feed = pd.concat(
-            [
-                _feed_row(deal_name='Order A', deal_line_item_name='Same Line'),
-                _feed_row(deal_name='Order B', deal_line_item_name='Same Line - Extension'),
-            ],
-            ignore_index=True,
-        )
-        result = combine_extension_lines(format_podcast_pacing(feed, 'Spotify'))
-        assert len(result) == 2
-
-    def test_empty_dataframe_returns_empty(self):
-        empty = format_podcast_pacing(pd.DataFrame(columns=list(PODCAST_COLUMN_MAP.keys())), 'Spotify')
-        assert len(combine_extension_lines(empty)) == 0
-
-    def test_rolled_up_duplicate_rows_are_not_double_counted(self):
-        """Gold-table shape where OMS already rolls extensions into the deal
-        line: multiple delivering campaigns repeat the same combined totals
-        (quantity 2,000,000 / production 2,100,000). Quantities must be
-        counted once; delivered impressions still sum across the rows."""
-        feed = pd.concat(
-            [
-                _feed_row(deal_name=self.CHEVRON_ORDER,
-                          deal_line_item_name='DIO - AUD - FNC - Mid - Hourly Update',
-                          deal_line_item_start_date='2026-06-01', deal_line_item_end_date='2026-08-14',
-                          quantity='2000000', production_quantity='2100000',
-                          net_unit_cost_amt='20', delivered_impressions='700000'),
-                _feed_row(deal_name=self.CHEVRON_ORDER,
-                          deal_line_item_name='DIO - AUD - FNC - Mid - Hourly Update',
-                          deal_line_item_start_date='2026-06-01', deal_line_item_end_date='2026-08-14',
-                          quantity='2000000', production_quantity='2100000',
-                          net_unit_cost_amt='20', delivered_impressions='500000'),
-            ],
-            ignore_index=True,
-        )
-        result = combine_extension_lines(format_podcast_pacing(feed, 'Spotify'))
-        assert len(result) == 1
-        row = result.iloc[0]
-        assert row['Goal Quantity'] == 2_100_000
-        assert row['Contracted Quantity'] == 2_000_000
-        assert row['Ad Server Impressions'] == 1_200_000
-        assert row['Total Impressions'] == 1_200_000
-        assert row['Quantity'] == 2_100_000
-
-    def test_mixed_duplicates_and_extension_line(self):
-        """Duplicated base rows plus a real extension row: base counted once,
-        extension quantity added, all delivery summed."""
-        feed = pd.concat(
-            [
-                _feed_row(deal_name=self.CHEVRON_ORDER,
-                          deal_line_item_name='DIO - AUD - FNC - Mid - Hourly Update',
-                          deal_line_item_start_date='2026-06-01', deal_line_item_end_date='2026-08-02',
-                          quantity='1900000', production_quantity='1995000',
-                          net_unit_cost_amt='20', delivered_impressions='700000'),
-                _feed_row(deal_name=self.CHEVRON_ORDER,
-                          deal_line_item_name='DIO - AUD - FNC - Mid - Hourly Update',
-                          deal_line_item_start_date='2026-06-01', deal_line_item_end_date='2026-08-02',
-                          quantity='1900000', production_quantity='1995000',
-                          net_unit_cost_amt='20', delivered_impressions='500000'),
-                _feed_row(deal_name=self.CHEVRON_ORDER,
-                          deal_line_item_name='DIO - AUD - FNC - Mid - Hourly Update - Extension',
-                          deal_line_item_start_date='2026-08-04', deal_line_item_end_date='2026-08-14',
-                          quantity='100000', production_quantity='105000',
-                          net_unit_cost_amt='20', delivered_impressions='0'),
-            ],
-            ignore_index=True,
-        )
-        result = combine_extension_lines(format_podcast_pacing(feed, 'Spotify'))
-        assert len(result) == 1
-        row = result.iloc[0]
-        assert row['Goal Quantity'] == 2_100_000
-        assert row['Contracted Quantity'] == 2_000_000
-        assert row['Ad Server Impressions'] == 1_200_000
-        assert row['Line Item Start Date'] == pd.Timestamp('2026-06-01')
-        assert row['Line Item End Date'] == pd.Timestamp('2026-08-14')
-
-    def test_two_distinct_extensions_with_equal_quantities_both_counted(self):
-        """'Extension' and 'Extension 2' with identical quantities are
-        different contributions (different original names) and must both add."""
-        feed = pd.concat(
-            [
-                _feed_row(deal_name=self.CHEVRON_ORDER,
-                          deal_line_item_name='Base Line',
-                          deal_line_item_start_date='2026-06-01', deal_line_item_end_date='2026-08-02',
-                          quantity='1800000', production_quantity='1890000',
-                          delivered_impressions='100000'),
-                _feed_row(deal_name=self.CHEVRON_ORDER,
-                          deal_line_item_name='Base Line - Extension',
-                          deal_line_item_start_date='2026-08-04', deal_line_item_end_date='2026-08-14',
-                          quantity='100000', production_quantity='105000',
-                          delivered_impressions='0'),
-                _feed_row(deal_name=self.CHEVRON_ORDER,
-                          deal_line_item_name='Base Line - Extension 2',
-                          deal_line_item_start_date='2026-08-04', deal_line_item_end_date='2026-08-14',
-                          quantity='100000', production_quantity='105000',
-                          delivered_impressions='0'),
-            ],
-            ignore_index=True,
-        )
-        result = combine_extension_lines(format_podcast_pacing(feed, 'Spotify'))
-        assert len(result) == 1
-        row = result.iloc[0]
-        assert row['Contracted Quantity'] == 2_000_000
-        assert row['Goal Quantity'] == 2_100_000
-
-    def test_no_helper_columns_leak_into_output(self):
-        result = self._combined_chevron()
-        assert '_original_line_item_name' not in result.columns
-
-
-# ---------------------------------------------------------------------------
 # metrics_calculaition
 # ---------------------------------------------------------------------------
 
@@ -533,13 +307,13 @@ class TestMetricsCalculaition:
 # ---------------------------------------------------------------------------
 
 class TestCalculateMetricsPodcast:
-    """End-to-end: raw feed → format → combine extensions → calculate_metrics."""
+    """End-to-end: aggregated feed → format_podcast_pacing → calculate_metrics."""
 
     REPORT_DATE = datetime(2026, 7, 13)
 
     def _pipeline(self, feed_df: pd.DataFrame, label: str = 'Amperwave') -> pd.DataFrame:
         return calculate_metrics(
-            combine_extension_lines(format_podcast_pacing(feed_df, label).copy()),
+            format_podcast_pacing(feed_df, label).copy(),
             self.REPORT_DATE,
             is_podcast=True,
         )
@@ -590,26 +364,84 @@ class TestCalculateMetricsPodcast:
         result = self._pipeline(_feed_row())
         assert result['Current Third Party OSI'].iloc[0] > 0
 
-    def test_chevron_uat_scenario_end_to_end(self):
-        """Exact UAT case: merged quantities and OSI on the merged flight."""
-        chevron = TestCombineExtensionLines()
+    def test_gam_path_unchanged_without_podcast_flag(self):
+        """The GAM News/Sports tabs keep the generic OSI (3p OSI stays 0
+        when there are no 3rd-party impressions)."""
+        df = format_podcast_pacing(_feed_row(), 'News')
+        result = calculate_metrics(df, self.REPORT_DATE)
+        assert result['Current First Party OSI'].iloc[0] > 0
+        assert result['Current Third Party OSI'].iloc[0] == 0
+
+    def test_chevron_uat_scenario_from_gold_table_grain(self):
+        """Mirrors the actual fox_bi_qa gold table rows (duplicate_checks.xlsx):
+        the table is ad-grain (Pre Roll + Mid Roll rows per day) but one
+        deal_line_item_id per line already carries the combined quantities
+        (2,000,000 / 2,100,000) and merged flight 06/01 - 08/14. After the
+        notebook-style aggregation (first attributes, summed delivery) the
+        report must show the UAT-expected values."""
+        order = 'Chevron / 26-27 / Scatter / News Digital / A250'
+        ad_grain = pd.DataFrame([
+            # deal 569046 – Hourly Update: one ad per day
+            dict(deal_line_item_id=569046, advertiser_name='Chevron', deal_name=order,
+                 deal_line_item_name='DIO - AUD - FNC - Mid - Hourly Update',
+                 deal_line_item_start_date='2026-06-01', deal_line_item_end_date='2026-08-14',
+                 net_unit_cost_amt=20, production_quantity=2_100_000, quantity=2_000_000,
+                 account_executive='AE', delivered_impressions=900_000),
+            dict(deal_line_item_id=569046, advertiser_name='Chevron', deal_name=order,
+                 deal_line_item_name='DIO - AUD - FNC - Mid - Hourly Update',
+                 deal_line_item_start_date='2026-06-01', deal_line_item_end_date='2026-08-14',
+                 net_unit_cost_amt=20, production_quantity=2_100_000, quantity=2_000_000,
+                 account_executive='AE', delivered_impressions=300_000),
+            # deal 569056 – Pre/Mid Rundown: TWO ads per day (Pre Roll + Mid Roll)
+            dict(deal_line_item_id=569056, advertiser_name='Chevron', deal_name=order,
+                 deal_line_item_name='DIO - AUD - FNC - Pre/Mid - Rundown',
+                 deal_line_item_start_date='2026-06-01', deal_line_item_end_date='2026-08-14',
+                 net_unit_cost_amt=20, production_quantity=1_050_000, quantity=1_000_000,
+                 account_executive='AE', delivered_impressions=17_953),
+            dict(deal_line_item_id=569056, advertiser_name='Chevron', deal_name=order,
+                 deal_line_item_name='DIO - AUD - FNC - Pre/Mid - Rundown',
+                 deal_line_item_start_date='2026-06-01', deal_line_item_end_date='2026-08-14',
+                 net_unit_cost_amt=20, production_quantity=1_050_000, quantity=1_000_000,
+                 account_executive='AE', delivered_impressions=582_047),
+        ])
+
+        # Same aggregation the notebook does in Spark:
+        # groupBy(deal_line_item_id).agg(first(attributes), sum(delivered))
+        feed = ad_grain.groupby('deal_line_item_id', as_index=False).agg(
+            advertiser_name=('advertiser_name', 'first'),
+            deal_name=('deal_name', 'first'),
+            deal_line_item_name=('deal_line_item_name', 'first'),
+            deal_line_item_start_date=('deal_line_item_start_date', 'first'),
+            deal_line_item_end_date=('deal_line_item_end_date', 'first'),
+            net_unit_cost_amt=('net_unit_cost_amt', 'first'),
+            production_quantity=('production_quantity', 'first'),
+            quantity=('quantity', 'first'),
+            account_executive=('account_executive', 'first'),
+            delivered_impressions=('delivered_impressions', 'sum'),
+        )
+
         report_date = datetime(2026, 7, 23)
         result = calculate_metrics(
-            combine_extension_lines(format_podcast_pacing(chevron._chevron_feed(), 'Spotify')),
-            report_date,
-            is_podcast=True,
+            format_podcast_pacing(feed, 'Spotify'), report_date, is_podcast=True,
         ).loc[:, REPORT_COLUMNS]
 
         assert len(result) == 2
+
         hourly = result[result['Line Item Name'] == 'DIO - AUD - FNC - Mid - Hourly Update'].iloc[0]
         assert hourly['Goal Quantity'] == 2_100_000
         assert hourly['Contracted Quantity'] == 2_000_000
+        assert hourly['Ad Server Impressions'] == 1_200_000
         assert hourly['Line Item Start Date'] == pd.Timestamp('2026-06-01')
         assert hourly['Line Item End Date'] == pd.Timestamp('2026-08-14')
-        # 07/23 is day 53 of the 75-day merged flight
+        # 07/23 is day 53 of the 75-day flight
         expected_osi = (1_200_000 / 2_000_000) / (53 / 75)
         assert hourly['Current First Party OSI'] == pytest.approx(expected_osi)
         assert hourly['Current Third Party OSI'] == pytest.approx(expected_osi)
+
+        rundown = result[result['Line Item Name'] == 'DIO - AUD - FNC - Pre/Mid - Rundown'].iloc[0]
+        assert rundown['Goal Quantity'] == 1_050_000
+        assert rundown['Contracted Quantity'] == 1_000_000
+        assert rundown['Ad Server Impressions'] == 600_000
 
     def test_amperwave_and_spotify_instances_distinguished(self):
         amp = self._pipeline(_feed_row(), 'Amperwave')

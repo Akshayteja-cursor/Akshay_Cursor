@@ -27,7 +27,6 @@ dbutils.library.restartPython()
 from datetime import datetime, timedelta
 from pyspark.sql import functions as F
 import io
-import re
 import boto3
 import pandas as pd
 import numpy as np
@@ -303,100 +302,6 @@ def format_podcast_pacing(feed_df: pd.DataFrame, instance_label: str) -> pd.Data
     return df
 
 
-# UAT 07/28/2026: AOS extends a line's flight by adding a new order line named
-# '<base line name> - Extension' that carries the additional quantity and the
-# extended flight window. Ad Ops expects one pacing row per logical line, e.g.
-# Chevron 'DIO - AUD - FNC - Mid - Hourly Update' must show
-# Goal Quantity 2,100,000 / Contracted Quantity 2,000,000 (base + extension)
-# with the flight running from the base start date to the extension end date.
-EXTENSION_SUFFIX_PATTERN = re.compile(r'\s*-\s*extension(?:\s*-?\s*\d+)?\s*$', re.IGNORECASE)
-
-
-def base_line_item_name(line_item_name):
-    """Strip a trailing '- Extension' / '- Extension 2' suffix from a line item name."""
-    if not isinstance(line_item_name, str):
-        return line_item_name
-    return EXTENSION_SUFFIX_PATTERN.sub('', line_item_name).strip()
-
-
-def combine_extension_lines(df: pd.DataFrame) -> pd.DataFrame:
-    """Roll AOS '- Extension' order lines up into their base line.
-
-    Operates on the output of format_podcast_pacing. Rows are grouped by
-    (Instance, Order, base line item name). Within each group:
-
-    * Delivered impressions are summed across ALL rows (each row is a
-      distinct delivering campaign / order line).
-    * Goal / Contracted Quantity are summed across DISTINCT line
-      contributions only (distinct original name + flight window + rate +
-      quantities). This supports both shapes seen in the gold tables:
-        - partial, order-line-grain rows (base 1,900,000 plus
-          '- Extension' 100,000) are summed to the deal total, and
-        - duplicate rows that already repeat the rolled-up deal-line
-          totals (one row per delivering campaign, each carrying
-          2,000,000) are counted once instead of being double-counted.
-    * The flight window spans the earliest start to the latest end and
-      descriptive fields come from the earliest-starting (base) line.
-    """
-    if df.empty:
-        return df
-
-    df = df.copy()
-    df['_original_line_item_name'] = df['Line Item Name']
-    df['Line Item Name'] = df['Line Item Name'].map(base_line_item_name)
-
-    named = df[df['Line Item Name'].notna()]
-    unnamed = df[df['Line Item Name'].isna()].drop(columns=['_original_line_item_name'])
-    if named.empty:
-        return df.drop(columns=['_original_line_item_name'])
-
-    named = named.sort_values('Line Item Start Date', na_position='last')
-    group_keys = ['Instance', 'Order', 'Line Item Name']
-
-    # Delivery is additive across every row in the group.
-    delivered = named.groupby(group_keys, dropna=False, sort=False, as_index=False).agg(
-        {
-            'Ad Server Impressions': 'sum',
-            'Impressions (3rd Party)': 'sum',
-            'Clicks (3rd Party)': 'sum',
-            'Total Error Count': 'sum',
-        },
-    )
-
-    # Quantities are summed over distinct contributions only, so rows that
-    # repeat the same rolled-up deal-line totals are not double-counted.
-    contributions = named.drop_duplicates(
-        subset=group_keys + [
-            '_original_line_item_name',
-            'Line Item Start Date',
-            'Line Item End Date',
-            'Rate',
-            'Goal Quantity',
-            'Contracted Quantity',
-        ],
-    )
-    combined = contributions.groupby(group_keys, dropna=False, sort=False, as_index=False).agg(
-        {
-            'Advertiser': 'first',
-            'Line Item Start Date': 'min',
-            'Line Item End Date': 'max',
-            'Rate': 'first',
-            'Goal Quantity': 'sum',
-            'Contracted Quantity': 'sum',
-            'Delivery Indicator': 'first',
-            'Salesperson': 'first',
-        },
-    )
-
-    combined = combined.merge(delivered, on=group_keys, how='left')
-    combined['Quantity'] = combined['Goal Quantity']
-    combined['Total Impressions'] = combined['Ad Server Impressions']
-
-    if unnamed.empty:
-        return combined
-    return pd.concat([combined, unnamed], ignore_index=True)
-
-
     
 def news_lifetime_delivery(ad_juster_pacing_news: str, report_date: datetime) -> pd.DataFrame:
     global drop_bucket,amperwave_delta_table, megaphone_delta_table
@@ -482,16 +387,8 @@ def news_lifetime_delivery(ad_juster_pacing_news: str, report_date: datetime) ->
     s3_client.put_object(Bucket=s3_bucket, Body=adjuster_news_data, Key=s3_key,)
 
     ########################report generation using new helper function###################################################
-    amperwave_report = calculate_metrics(
-        combine_extension_lines(format_podcast_pacing(amperwave_data, 'Amperwave')),
-        report_date,
-        is_podcast=True,
-    ).loc[:, REPORT_COLUMNS]
-    megaphone_report = calculate_metrics(
-        combine_extension_lines(format_podcast_pacing(megaphone_data, 'Spotify')),
-        report_date,
-        is_podcast=True,
-    ).loc[:, REPORT_COLUMNS]
+    amperwave_report = calculate_metrics(format_podcast_pacing(amperwave_data, 'Amperwave'), report_date, is_podcast=True).loc[:, REPORT_COLUMNS]
+    megaphone_report = calculate_metrics(format_podcast_pacing(megaphone_data, 'Spotify'), report_date, is_podcast=True).loc[:, REPORT_COLUMNS]
 
     op_gam_fw_adj = merge_news_delivery_data(op_oms, gam, adjuster_news, op_fw_adj)
     op_gam_fw_adj = calculate_metrics(op_gam_fw_adj, report_date)
