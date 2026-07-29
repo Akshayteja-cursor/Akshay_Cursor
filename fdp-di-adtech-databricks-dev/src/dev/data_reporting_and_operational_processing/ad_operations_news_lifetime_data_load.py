@@ -151,7 +151,10 @@ def podcast_osi(row: pd.Series, report_date: datetime) -> float:
         return 0
 
     # Completed flights should stop counting at the end date.
-    effective_date = min(report_date, end_date)
+    # Note: written without built-in min() because core.py does
+    # 'from pyspark.sql.functions import *', which shadows min/max
+    # in the notebook session with the 1-argument PySpark versions.
+    effective_date = report_date if report_date < end_date else end_date
 
     days_live = (
         effective_date - start_date
