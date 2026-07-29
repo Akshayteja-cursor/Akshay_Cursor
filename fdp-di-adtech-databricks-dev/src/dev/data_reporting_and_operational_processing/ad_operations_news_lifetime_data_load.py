@@ -323,28 +323,59 @@ def combine_extension_lines(df: pd.DataFrame) -> pd.DataFrame:
     """Roll AOS '- Extension' order lines up into their base line.
 
     Operates on the output of format_podcast_pacing. Rows are grouped by
-    (Instance, Order, base line item name): quantities and delivery are
-    summed, the flight window spans the earliest start to the latest end,
-    and descriptive fields are taken from the earliest-starting (base) line.
+    (Instance, Order, base line item name). Within each group:
+
+    * Delivered impressions are summed across ALL rows (each row is a
+      distinct delivering campaign / order line).
+    * Goal / Contracted Quantity are summed across DISTINCT line
+      contributions only (distinct original name + flight window + rate +
+      quantities). This supports both shapes seen in the gold tables:
+        - partial, order-line-grain rows (base 1,900,000 plus
+          '- Extension' 100,000) are summed to the deal total, and
+        - duplicate rows that already repeat the rolled-up deal-line
+          totals (one row per delivering campaign, each carrying
+          2,000,000) are counted once instead of being double-counted.
+    * The flight window spans the earliest start to the latest end and
+      descriptive fields come from the earliest-starting (base) line.
     """
     if df.empty:
         return df
 
     df = df.copy()
+    df['_original_line_item_name'] = df['Line Item Name']
     df['Line Item Name'] = df['Line Item Name'].map(base_line_item_name)
 
     named = df[df['Line Item Name'].notna()]
-    unnamed = df[df['Line Item Name'].isna()]
+    unnamed = df[df['Line Item Name'].isna()].drop(columns=['_original_line_item_name'])
     if named.empty:
-        return df
+        return df.drop(columns=['_original_line_item_name'])
 
     named = named.sort_values('Line Item Start Date', na_position='last')
-    combined = named.groupby(
-        ['Instance', 'Order', 'Line Item Name'],
-        dropna=False,
-        sort=False,
-        as_index=False,
-    ).agg(
+    group_keys = ['Instance', 'Order', 'Line Item Name']
+
+    # Delivery is additive across every row in the group.
+    delivered = named.groupby(group_keys, dropna=False, sort=False, as_index=False).agg(
+        {
+            'Ad Server Impressions': 'sum',
+            'Impressions (3rd Party)': 'sum',
+            'Clicks (3rd Party)': 'sum',
+            'Total Error Count': 'sum',
+        },
+    )
+
+    # Quantities are summed over distinct contributions only, so rows that
+    # repeat the same rolled-up deal-line totals are not double-counted.
+    contributions = named.drop_duplicates(
+        subset=group_keys + [
+            '_original_line_item_name',
+            'Line Item Start Date',
+            'Line Item End Date',
+            'Rate',
+            'Goal Quantity',
+            'Contracted Quantity',
+        ],
+    )
+    combined = contributions.groupby(group_keys, dropna=False, sort=False, as_index=False).agg(
         {
             'Advertiser': 'first',
             'Line Item Start Date': 'min',
@@ -354,12 +385,10 @@ def combine_extension_lines(df: pd.DataFrame) -> pd.DataFrame:
             'Contracted Quantity': 'sum',
             'Delivery Indicator': 'first',
             'Salesperson': 'first',
-            'Ad Server Impressions': 'sum',
-            'Impressions (3rd Party)': 'sum',
-            'Clicks (3rd Party)': 'sum',
-            'Total Error Count': 'sum',
         },
     )
+
+    combined = combined.merge(delivered, on=group_keys, how='left')
     combined['Quantity'] = combined['Goal Quantity']
     combined['Total Impressions'] = combined['Ad Server Impressions']
 

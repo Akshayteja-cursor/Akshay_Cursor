@@ -386,6 +386,100 @@ class TestCombineExtensionLines:
         empty = format_podcast_pacing(pd.DataFrame(columns=list(PODCAST_COLUMN_MAP.keys())), 'Spotify')
         assert len(combine_extension_lines(empty)) == 0
 
+    def test_rolled_up_duplicate_rows_are_not_double_counted(self):
+        """Gold-table shape where OMS already rolls extensions into the deal
+        line: multiple delivering campaigns repeat the same combined totals
+        (quantity 2,000,000 / production 2,100,000). Quantities must be
+        counted once; delivered impressions still sum across the rows."""
+        feed = pd.concat(
+            [
+                _feed_row(deal_name=self.CHEVRON_ORDER,
+                          deal_line_item_name='DIO - AUD - FNC - Mid - Hourly Update',
+                          deal_line_item_start_date='2026-06-01', deal_line_item_end_date='2026-08-14',
+                          quantity='2000000', production_quantity='2100000',
+                          net_unit_cost_amt='20', delivered_impressions='700000'),
+                _feed_row(deal_name=self.CHEVRON_ORDER,
+                          deal_line_item_name='DIO - AUD - FNC - Mid - Hourly Update',
+                          deal_line_item_start_date='2026-06-01', deal_line_item_end_date='2026-08-14',
+                          quantity='2000000', production_quantity='2100000',
+                          net_unit_cost_amt='20', delivered_impressions='500000'),
+            ],
+            ignore_index=True,
+        )
+        result = combine_extension_lines(format_podcast_pacing(feed, 'Spotify'))
+        assert len(result) == 1
+        row = result.iloc[0]
+        assert row['Goal Quantity'] == 2_100_000
+        assert row['Contracted Quantity'] == 2_000_000
+        assert row['Ad Server Impressions'] == 1_200_000
+        assert row['Total Impressions'] == 1_200_000
+        assert row['Quantity'] == 2_100_000
+
+    def test_mixed_duplicates_and_extension_line(self):
+        """Duplicated base rows plus a real extension row: base counted once,
+        extension quantity added, all delivery summed."""
+        feed = pd.concat(
+            [
+                _feed_row(deal_name=self.CHEVRON_ORDER,
+                          deal_line_item_name='DIO - AUD - FNC - Mid - Hourly Update',
+                          deal_line_item_start_date='2026-06-01', deal_line_item_end_date='2026-08-02',
+                          quantity='1900000', production_quantity='1995000',
+                          net_unit_cost_amt='20', delivered_impressions='700000'),
+                _feed_row(deal_name=self.CHEVRON_ORDER,
+                          deal_line_item_name='DIO - AUD - FNC - Mid - Hourly Update',
+                          deal_line_item_start_date='2026-06-01', deal_line_item_end_date='2026-08-02',
+                          quantity='1900000', production_quantity='1995000',
+                          net_unit_cost_amt='20', delivered_impressions='500000'),
+                _feed_row(deal_name=self.CHEVRON_ORDER,
+                          deal_line_item_name='DIO - AUD - FNC - Mid - Hourly Update - Extension',
+                          deal_line_item_start_date='2026-08-04', deal_line_item_end_date='2026-08-14',
+                          quantity='100000', production_quantity='105000',
+                          net_unit_cost_amt='20', delivered_impressions='0'),
+            ],
+            ignore_index=True,
+        )
+        result = combine_extension_lines(format_podcast_pacing(feed, 'Spotify'))
+        assert len(result) == 1
+        row = result.iloc[0]
+        assert row['Goal Quantity'] == 2_100_000
+        assert row['Contracted Quantity'] == 2_000_000
+        assert row['Ad Server Impressions'] == 1_200_000
+        assert row['Line Item Start Date'] == pd.Timestamp('2026-06-01')
+        assert row['Line Item End Date'] == pd.Timestamp('2026-08-14')
+
+    def test_two_distinct_extensions_with_equal_quantities_both_counted(self):
+        """'Extension' and 'Extension 2' with identical quantities are
+        different contributions (different original names) and must both add."""
+        feed = pd.concat(
+            [
+                _feed_row(deal_name=self.CHEVRON_ORDER,
+                          deal_line_item_name='Base Line',
+                          deal_line_item_start_date='2026-06-01', deal_line_item_end_date='2026-08-02',
+                          quantity='1800000', production_quantity='1890000',
+                          delivered_impressions='100000'),
+                _feed_row(deal_name=self.CHEVRON_ORDER,
+                          deal_line_item_name='Base Line - Extension',
+                          deal_line_item_start_date='2026-08-04', deal_line_item_end_date='2026-08-14',
+                          quantity='100000', production_quantity='105000',
+                          delivered_impressions='0'),
+                _feed_row(deal_name=self.CHEVRON_ORDER,
+                          deal_line_item_name='Base Line - Extension 2',
+                          deal_line_item_start_date='2026-08-04', deal_line_item_end_date='2026-08-14',
+                          quantity='100000', production_quantity='105000',
+                          delivered_impressions='0'),
+            ],
+            ignore_index=True,
+        )
+        result = combine_extension_lines(format_podcast_pacing(feed, 'Spotify'))
+        assert len(result) == 1
+        row = result.iloc[0]
+        assert row['Contracted Quantity'] == 2_000_000
+        assert row['Goal Quantity'] == 2_100_000
+
+    def test_no_helper_columns_leak_into_output(self):
+        result = self._combined_chevron()
+        assert '_original_line_item_name' not in result.columns
+
 
 # ---------------------------------------------------------------------------
 # metrics_calculaition

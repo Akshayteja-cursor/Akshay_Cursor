@@ -95,23 +95,84 @@ typed_source AS (
     FROM source_agg
 ),
 -- Roll AOS '- Extension' order lines up into their base line, matching
--- combine_extension_lines in ad_operations_news_lifetime_data_load.
-combined_source AS (
+-- combine_extension_lines in ad_operations_news_lifetime_data_load:
+--   * delivered impressions sum across ALL rows of the logical line;
+--   * Goal/Contracted Quantity sum across DISTINCT contributions only
+--     (distinct original name + flight window + rate + quantities), so rows
+--     that already repeat the rolled-up deal-line totals are counted once.
+delivered_by_line AS (
     SELECT
         instance,
-        MIN_BY(advertiser, line_item_start_ts)  AS advertiser,
         order_name,
-        base_line_item_name                     AS line_item_name,
-        MIN(line_item_start_ts)                 AS line_item_start_ts,
-        MAX(line_item_end_ts)                   AS line_item_end_ts,
-        MIN_BY(rate, line_item_start_ts)        AS rate,
-        SUM(goal_quantity)                      AS goal_quantity,
-        SUM(contracted_quantity)                AS contracted_quantity,
-        MIN_BY(salesperson, line_item_start_ts) AS salesperson,
-        SUM(ad_server_impressions)              AS ad_server_impressions
+        base_line_item_name,
+        SUM(ad_server_impressions) AS ad_server_impressions
     FROM typed_source
     WHERE line_item_name IS NOT NULL
     GROUP BY instance, order_name, base_line_item_name
+),
+line_contributions AS (
+    SELECT
+        instance,
+        order_name,
+        base_line_item_name,
+        line_item_name,
+        line_item_start_ts,
+        line_item_end_ts,
+        rate,
+        goal_quantity,
+        contracted_quantity
+    FROM typed_source
+    WHERE line_item_name IS NOT NULL
+    GROUP BY instance, order_name, base_line_item_name, line_item_name,
+             line_item_start_ts, line_item_end_ts, rate,
+             goal_quantity, contracted_quantity
+),
+combined_named AS (
+    SELECT
+        instance,
+        order_name,
+        base_line_item_name,
+        MIN(line_item_start_ts)          AS line_item_start_ts,
+        MAX(line_item_end_ts)            AS line_item_end_ts,
+        MIN_BY(rate, line_item_start_ts) AS rate,
+        SUM(goal_quantity)               AS goal_quantity,
+        SUM(contracted_quantity)         AS contracted_quantity
+    FROM line_contributions
+    GROUP BY instance, order_name, base_line_item_name
+),
+line_descriptives AS (
+    SELECT
+        instance,
+        order_name,
+        base_line_item_name,
+        MIN_BY(advertiser, line_item_start_ts)  AS advertiser,
+        MIN_BY(salesperson, line_item_start_ts) AS salesperson
+    FROM typed_source
+    WHERE line_item_name IS NOT NULL
+    GROUP BY instance, order_name, base_line_item_name
+),
+combined_source AS (
+    SELECT
+        cn.instance,
+        d.advertiser,
+        cn.order_name,
+        cn.base_line_item_name AS line_item_name,
+        cn.line_item_start_ts,
+        cn.line_item_end_ts,
+        cn.rate,
+        cn.goal_quantity,
+        cn.contracted_quantity,
+        d.salesperson,
+        del.ad_server_impressions
+    FROM combined_named cn
+    JOIN line_descriptives d
+      ON  cn.instance <=> d.instance
+      AND cn.order_name <=> d.order_name
+      AND cn.base_line_item_name <=> d.base_line_item_name
+    JOIN delivered_by_line del
+      ON  cn.instance <=> del.instance
+      AND cn.order_name <=> del.order_name
+      AND cn.base_line_item_name <=> del.base_line_item_name
 
     UNION ALL
 
