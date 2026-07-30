@@ -1,0 +1,194 @@
+10.61.18.146
+ INFO - ::group::Log message source details
+*** Found logs in s3:
+***   * s3://airflow-logs-clnt6et75009k01nx6d27jeld/clz7mb7e8100p01jyxxkzxa60/dag_id=adsales_digital_youtube/run_id=manual__2026-07-29T18:40:58+00:00/task_id=digital_youtube_silver_task/attempt=3.log
+ INFO - ::endgroup::
+[2026-07-29T18:45:20.336+0000] {local_task_job_runner.py:123} INFO - ::group::Pre task execution logs
+[2026-07-29T18:45:20.357+0000] {taskinstance.py:2632} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: adsales_digital_youtube.digital_youtube_silver_task manual__2026-07-29T18:40:58+00:00 [queued]>
+[2026-07-29T18:45:20.373+0000] {taskinstance.py:2632} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: adsales_digital_youtube.digital_youtube_silver_task manual__2026-07-29T18:40:58+00:00 [queued]>
+[2026-07-29T18:45:20.373+0000] {taskinstance.py:2885} INFO - Starting attempt 3 of 3
+[2026-07-29T18:45:20.396+0000] {taskinstance.py:2908} INFO - Executing <Task(PythonOperator): digital_youtube_silver_task> on 2026-07-29 18:40:58+00:00
+[2026-07-29T18:45:20.403+0000] {warnings.py:112} WARNING - /usr/local/lib/python3.12/site-packages/airflow/task/task_runner/standard_task_runner.py:70: DeprecationWarning: This process (pid=1464) is multi-threaded, use of fork() may lead to deadlocks in the child.
+  pid = os.fork()
+[2026-07-29T18:45:20.404+0000] {standard_task_runner.py:72} INFO - Started process 1465 to run task
+[2026-07-29T18:45:20.405+0000] {standard_task_runner.py:104} INFO - Running: ['airflow', 'tasks', 'run', 'adsales_digital_youtube', 'digital_youtube_silver_task', 'manual__2026-07-29T18:40:58+00:00', '--job-id', '845382', '--raw', '--subdir', 'DAGS_FOLDER/adsales/adsales_digital_youtube.py', '--cfg-path', '/tmp/tmpg1rjc96v']
+[2026-07-29T18:45:20.406+0000] {standard_task_runner.py:105} INFO - Job 845382: Subtask digital_youtube_silver_task
+[2026-07-29T18:45:20.468+0000] {task_command.py:467} INFO - Running <TaskInstance: adsales_digital_youtube.digital_youtube_silver_task manual__2026-07-29T18:40:58+00:00 [running]> on host 10.61.18.146
+[2026-07-29T18:45:20.596+0000] {taskinstance.py:3158} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='adsales' AIRFLOW_CTX_DAG_ID='adsales_digital_youtube' AIRFLOW_CTX_TASK_ID='digital_youtube_silver_task' AIRFLOW_CTX_EXECUTION_DATE='2026-07-29T18:40:58+00:00' AIRFLOW_CTX_TRY_NUMBER='3' AIRFLOW_CTX_DAG_RUN_ID='manual__2026-07-29T18:40:58+00:00'
+[2026-07-29T18:45:20.597+0000] {warnings.py:112} WARNING - /usr/local/lib/python3.12/site-packages/airflow_mcd/callbacks/utils.py:174: RemovedInAirflow3Warning: Call to deprecated function (or staticmethod) prev_attempted_tries. (Use try_number instead.) -- Deprecated since version 2.10.0.
+  prev_attempted_tries = ti.prev_attempted_tries
+[2026-07-29T18:45:20.622+0000] {connection.py:277} WARNING - Connection schemes (type: mcd_gateway) shall not contain '_' according to RFC3986.
+[2026-07-29T18:45:20.622+0000] {base.py:84} INFO - Retrieving connection 'mcd_gateway_conn_dev'
+[2026-07-29T18:45:20.635+0000] {connection.py:277} WARNING - Connection schemes (type: mcd_gateway) shall not contain '_' according to RFC3986.
+[2026-07-29T18:45:20.636+0000] {base.py:84} INFO - Retrieving connection 'mcd_gateway_conn_dev'
+[2026-07-29T18:45:20.637+0000] {client.py:272} INFO - Sending MC Callback information to Gateway, operation=upload_airflow_task_result
+[2026-07-29T18:45:21.001+0000] {warnings.py:112} WARNING - /usr/local/lib/python3.12/site-packages/airflow/providers/openlineage/plugins/listener.py:771: DeprecationWarning: This process (pid=1465) is multi-threaded, use of fork() may lead to deadlocks in the child.
+  pid = os.fork()
+[2026-07-29T18:45:21.041+0000] {client.py:116} INFO - OpenLineageClient will use `composite` transport
+[2026-07-29T18:45:21.258+0000] {composite.py:127} WARNING - Transport <HttpTransport(name=atlan, kind=http, priority=0)> failed to emit event with error: 404 Client Error: Not Found for url: https://fox-datacatalog.atlan.com/events/openlineage/airflow-astronomer/api/v1/lineage
+[2026-07-29T18:45:21.258+0000] {adapter.py:178} INFO - Successfully emitted OpenLineage `START` event of id `019faf2e-0a90-7073-b57c-6cd0d0102af3`
+[2026-07-29T18:45:21.294+0000] {taskinstance.py:740} INFO - ::endgroup::
+[2026-07-29T18:45:25.137+0000] {taskinstance.py:3337} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 776, in _execute_task
+    result = _execute_callable(context=context, **execute_callable_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 742, in _execute_callable
+    return ExecutionCallableRunner(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/utils/operator_helpers.py", line 252, in run
+    return self.func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/models/baseoperator.py", line 425, in wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/operators/python.py", line 238, in execute
+    return_value = self.execute_callable()
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/operators/python.py", line 256, in execute_callable
+    return runner.run(*self.op_args, **self.op_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/utils/operator_helpers.py", line 252, in run
+    return self.func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/airflow/dags/adsales/adsales_digital_youtube.py", line 64, in run_python_script
+    subprocess.run(cmd, check=True)
+  File "/usr/local/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/usr/local/bin/python3.12', '/usr/local/airflow/include/adsales/scripts/adsales_digital_youtube/adsales_digital_youtube_new.py', '--layer', 'silver']' returned non-zero exit status 1.
+[2026-07-29T18:45:25.168+0000] {client.py:116} INFO - OpenLineageClient will use `composite` transport
+[2026-07-29T18:45:25.357+0000] {composite.py:127} WARNING - Transport <HttpTransport(name=atlan, kind=http, priority=0)> failed to emit event with error: 404 Client Error: Not Found for url: https://fox-datacatalog.atlan.com/events/openlineage/airflow-astronomer/api/v1/lineage
+[2026-07-29T18:45:25.357+0000] {adapter.py:178} INFO - Successfully emitted OpenLineage `FAIL` event of id `019faf2e-0a90-7073-b57c-6cd0d0102af3`
+[2026-07-29T18:45:25.406+0000] {taskinstance.py:1242} INFO - Marking task as FAILED. dag_id=adsales_digital_youtube, task_id=digital_youtube_silver_task, run_id=manual__2026-07-29T18:40:58+00:00, execution_date=20260729T184058, start_date=20260729T184520, end_date=20260729T184525
+[2026-07-29T18:45:25.407+0000] {taskinstance.py:1580} INFO - Executing callback at index 0: on_failure_callback
+[2026-07-29T18:45:25.407+0000] {NotificationTasks.py:55} INFO - Sending SES Email...
+[2026-07-29T18:45:25.456+0000] {base.py:84} INFO - Retrieving connection 'adsales-aws-conn-uat'
+[2026-07-29T18:45:26.584+0000] {logging_mixin.py:190} INFO - Error while sending SES Email email.
+ Reason:An error occurred (MessageRejected) when calling the SendRawEmail operation: Email address is not verified. The following identities failed the check in region US-WEST-2: adsales.dev@data.fox
+[2026-07-29T18:45:26.584+0000] {taskinstance.py:1584} ERROR - Error in callback at index 0: on_failure_callback
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 282, in _run_raw_task
+    TaskInstance._execute_task_with_callbacks(
+  File "/usr/local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 3185, in _execute_task_with_callbacks
+    result = self._execute_task(context, task_orig)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 3209, in _execute_task
+    return _execute_task(self, context, task_orig)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 776, in _execute_task
+    result = _execute_callable(context=context, **execute_callable_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 742, in _execute_callable
+    return ExecutionCallableRunner(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/utils/operator_helpers.py", line 252, in run
+    return self.func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/models/baseoperator.py", line 425, in wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/operators/python.py", line 238, in execute
+    return_value = self.execute_callable()
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/operators/python.py", line 256, in execute_callable
+    return runner.run(*self.op_args, **self.op_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/utils/operator_helpers.py", line 252, in run
+    return self.func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/airflow/dags/adsales/adsales_digital_youtube.py", line 64, in run_python_script
+    subprocess.run(cmd, check=True)
+  File "/usr/local/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/usr/local/bin/python3.12', '/usr/local/airflow/include/adsales/scripts/adsales_digital_youtube/adsales_digital_youtube_new.py', '--layer', 'silver']' returned non-zero exit status 1.
+During handling of the above exception, another exception occurred:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 1582, in _run_finished_callback
+    callback(context)
+  File "/usr/local/airflow/include/adsales/scripts/common/NotificationManager.py", line 100, in on_failure_callback
+    self.send_email_notification(html_content, email_subject, from_email, to_email)
+  File "/usr/local/airflow/include/adsales/scripts/common/NotificationManager.py", line 48, in send_email_notification
+    self.notification_util.send_email_ses(
+  File "/usr/local/airflow/include/adsales/scripts/common/NotificationTasks.py", line 58, in send_email_ses
+    ses_client.send_email(
+  File "/usr/local/lib/python3.12/site-packages/airflow/providers/amazon/aws/hooks/ses.py", line 103, in send_email
+    return ses_client.send_raw_email(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/botocore/client.py", line 602, in _api_call
+    return self._make_api_call(operation_name, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/botocore/context.py", line 123, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/botocore/client.py", line 1078, in _make_api_call
+    raise error_class(parsed_response, operation_name)
+botocore.errorfactory.MessageRejected: An error occurred (MessageRejected) when calling the SendRawEmail operation: Email address is not verified. The following identities failed the check in region US-WEST-2: adsales.dev@data.fox
+[2026-07-29T18:45:26.587+0000] {taskinstance.py:1580} INFO - Executing callback at index 1: mcd_task_failure_callback
+[2026-07-29T18:45:26.606+0000] {connection.py:277} WARNING - Connection schemes (type: mcd_gateway) shall not contain '_' according to RFC3986.
+[2026-07-29T18:45:26.606+0000] {base.py:84} INFO - Retrieving connection 'mcd_gateway_conn_dev'
+[2026-07-29T18:45:26.629+0000] {connection.py:277} WARNING - Connection schemes (type: mcd_gateway) shall not contain '_' according to RFC3986.
+[2026-07-29T18:45:26.629+0000] {base.py:84} INFO - Retrieving connection 'mcd_gateway_conn_dev'
+[2026-07-29T18:45:26.630+0000] {client.py:272} INFO - Sending MC Callback information to Gateway, operation=upload_airflow_task_result
+[2026-07-29T18:45:27.045+0000] {taskinstance.py:349} INFO - ::group::Post task execution logs
+[2026-07-29T18:45:27.046+0000] {standard_task_runner.py:124} ERROR - Failed to execute job 845382 for task digital_youtube_silver_task (Command '['/usr/local/bin/python3.12', '/usr/local/airflow/include/adsales/scripts/adsales_digital_youtube/adsales_digital_youtube_new.py', '--layer', 'silver']' returned non-zero exit status 1.; 1465)
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/airflow/task/task_runner/standard_task_runner.py", line 117, in _start_by_fork
+    ret = args.func(args, dag=self.dag)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/cli/cli_config.py", line 49, in command
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/utils/cli.py", line 116, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/cli/commands/task_command.py", line 483, in task_run
+    task_return_code = _run_task_by_selected_method(args, _dag, ti)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/cli/commands/task_command.py", line 256, in _run_task_by_selected_method
+    return _run_raw_task(args, ti)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/cli/commands/task_command.py", line 341, in _run_raw_task
+    return ti._run_raw_task(
+           ^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/utils/session.py", line 97, in wrapper
+    return func(*args, session=session, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 3030, in _run_raw_task
+    return _run_raw_task(
+           ^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 282, in _run_raw_task
+    TaskInstance._execute_task_with_callbacks(
+  File "/usr/local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 3185, in _execute_task_with_callbacks
+    result = self._execute_task(context, task_orig)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 3209, in _execute_task
+    return _execute_task(self, context, task_orig)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 776, in _execute_task
+    result = _execute_callable(context=context, **execute_callable_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 742, in _execute_callable
+    return ExecutionCallableRunner(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/utils/operator_helpers.py", line 252, in run
+    return self.func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/models/baseoperator.py", line 425, in wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/operators/python.py", line 238, in execute
+    return_value = self.execute_callable()
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/operators/python.py", line 256, in execute_callable
+    return runner.run(*self.op_args, **self.op_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/airflow/utils/operator_helpers.py", line 252, in run
+    return self.func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/airflow/dags/adsales/adsales_digital_youtube.py", line 64, in run_python_script
+    subprocess.run(cmd, check=True)
+  File "/usr/local/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/usr/local/bin/python3.12', '/usr/local/airflow/include/adsales/scripts/adsales_digital_youtube/adsales_digital_youtube_new.py', '--layer', 'silver']' returned non-zero exit status 1.
+[2026-07-29T18:45:27.101+0000] {local_task_job_runner.py:266} INFO - Task exited with return code 1
+[2026-07-29T18:45:27.102+0000] {local_task_job_runner.py:245} INFO - ::endgroup::
