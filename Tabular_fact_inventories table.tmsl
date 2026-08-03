@@ -1,0 +1,609 @@
+{
+  "createOrReplace": {
+    "object": {
+      "database": "PDM - PEG - TEST INVENTORY",
+      "table": "fact_InventoryHistory"
+    },
+    "table": {
+      "name": "fact_InventoryHistory",
+      "columns": [
+        {
+          "name": "BookingDate",
+          "dataType": "dateTime",
+          "isHidden": true,
+          "sourceColumn": "BookingDate",
+          "displayFolder": "References"
+        },
+        {
+          "name": "CurrencyCode",
+          "dataType": "string",
+          "isHidden": true,
+          "sourceColumn": "CurrencyCode",
+          "displayFolder": "References"
+        },
+        {
+          "name": "InventoryGrossValue",
+          "dataType": "decimal",
+          "isHidden": true,
+          "sourceColumn": "InventoryGrossValue",
+          "displayFolder": "Measures",
+          "summarizeBy": "none"
+        },
+        {
+          "name": "InventoryStatusCode",
+          "dataType": "int64",
+          "isHidden": true,
+          "sourceColumn": "InventoryStatusCode",
+          "displayFolder": "References",
+          "summarizeBy": "none"
+        },
+        {
+          "name": "InventoryUnits",
+          "dataType": "int64",
+          "isHidden": true,
+          "sourceColumn": "InventoryUnits",
+          "displayFolder": "Measures",
+          "summarizeBy": "none"
+        },
+        {
+          "name": "PupMasterId",
+          "dataType": "int64",
+          "isHidden": true,
+          "sourceColumn": "PupMasterId",
+          "displayFolder": "References",
+          "summarizeBy": "none"
+        },
+        {
+          "name": "RBUCode",
+          "dataType": "int64",
+          "isHidden": true,
+          "sourceColumn": "RBUCode",
+          "displayFolder": "References",
+          "summarizeBy": "none"
+        },
+        {
+          "name": "BusinessTypeCode",
+          "dataType": "int64",
+          "isHidden": true,
+          "sourceColumn": "BusinessTypeCode",
+          "displayFolder": "References",
+          "summarizeBy": "none"
+        },
+        {
+          "type": "calculated",
+          "name": "ArticleAreaKey",
+          "dataType": "string",
+          "isDataTypeInferred": true,
+          "isHidden": true,
+          "expression": "'fact_InventoryHistory'[ArticleNumber_BK] & \"-\" & RELATED( 'dim_PDU_Active'[FcUnitAreaCode] )",
+          "isAvailableInMdx": false,
+          "displayFolder": "References"
+        },
+        {
+          "type": "calculated",
+          "name": "BusinessClassCode",
+          "dataType": "int64",
+          "isDataTypeInferred": true,
+          "isHidden": true,
+          "expression": "10",
+          "displayFolder": "References",
+          "summarizeBy": "none"
+        },
+        {
+          "type": "calculated",
+          "name": "InventoryStatus",
+          "dataType": "string",
+          "isDataTypeInferred": true,
+          "expression": "RELATED('dim_InventoryStatus'[InventoryStatusDesc] )"
+        },
+        {
+          "name": "NatArticle_BK",
+          "dataType": "string",
+          "isHidden": true,
+          "sourceColumn": "NatArticle_BK",
+          "displayFolder": "References"
+        },
+        {
+          "type": "calculated",
+          "name": "SalesZoneCode",
+          "dataType": "int64",
+          "isDataTypeInferred": true,
+          "isHidden": true,
+          "expression": "IF(related('dim_StoreDC_Active'[IsTempStoreFlag]) =1 , 2, 1)",
+          "displayFolder": "References",
+          "summarizeBy": "none"
+        },
+        {
+          "name": "ArticleNumber_BK",
+          "dataType": "string",
+          "isHidden": true,
+          "sourceColumn": "ArticleNumber_BK",
+          "displayFolder": "References",
+          "summarizeBy": "none"
+        },
+        {
+          "name": "StyleNumber_BK",
+          "dataType": "string",
+          "isHidden": true,
+          "sourceColumn": "StyleNumber_BK",
+          "displayFolder": "References",
+          "summarizeBy": "none"
+        },
+        {
+          "name": "ArticleSize_BK",
+          "dataType": "string",
+          "isHidden": true,
+          "sourceColumn": "ArticleSize_BK",
+          "displayFolder": "References",
+          "summarizeBy": "none"
+        },
+        {
+          "name": "PDUCode",
+          "dataType": "string",
+          "isHidden": true,
+          "sourceColumn": "PDUCode",
+          "displayFolder": "References"
+        },
+        {
+          "name": "ProdDivCode",
+          "dataType": "int64",
+          "isHidden": true,
+          "sourceColumn": "ProductDivisionCode",
+          "displayFolder": "References",
+          "summarizeBy": "none"
+        },
+        {
+          "name": "BrandCode",
+          "dataType": "string",
+          "isHidden": true,
+          "sourceColumn": "BrandCode",
+          "displayFolder": "References"
+        },
+        {
+          "name": "NatStoreDC_BK",
+          "dataType": "string",
+          "isHidden": true,
+          "sourceColumn": "NatStoreDC_BK",
+          "displayFolder": "References"
+        },
+        {
+          "name": "InventoryNetValue",
+          "dataType": "decimal",
+          "isHidden": true,
+          "sourceColumn": "InventoryNetValue",
+          "displayFolder": "Measures",
+          "summarizeBy": "none"
+        },
+        {
+          "name": "RepAgeGroupCode",
+          "dataType": "int64",
+          "isHidden": true,
+          "sourceColumn": "ReportingAgeGroupCode",
+          "isAvailableInMdx": false,
+          "displayFolder": "References",
+          "summarizeBy": "none"
+        },
+        {
+          "name": "RepGenderCode",
+          "dataType": "int64",
+          "isHidden": true,
+          "sourceColumn": "ReportingGenderCode",
+          "displayFolder": "References",
+          "summarizeBy": "none"
+        },
+        {
+          "name": "ProductCreationModelCode",
+          "dataType": "int64",
+          "isHidden": true,
+          "sourceColumn": "ProductCreationModelCode",
+          "displayFolder": "References",
+          "summarizeBy": "none"
+        },
+        {
+          "name": "BusinessSegmentCode",
+          "dataType": "int64",
+          "isHidden": true,
+          "sourceColumn": "BusinessSegmentCode",
+          "isAvailableInMdx": false,
+          "displayFolder": "References",
+          "summarizeBy": "none"
+        },
+        {
+          "type": "calculated",
+          "name": "RBUCode_c",
+          "dataType": "int64",
+          "isDataTypeInferred": true,
+          "isHidden": true,
+          "expression": "RELATED('dim_Style_Active'[RBUCode])",
+          "isAvailableInMdx": false,
+          "displayFolder": "References",
+          "summarizeBy": "none"
+        },
+        {
+          "type": "calculated",
+          "name": "BusinessSegmentCode_c",
+          "dataType": "int64",
+          "isDataTypeInferred": true,
+          "isHidden": true,
+          "expression": "RELATED('dim_Style_Active'[BusinessSegmentCode])",
+          "isAvailableInMdx": false,
+          "displayFolder": "References",
+          "summarizeBy": "none"
+        },
+        {
+          "name": "RRP excl. VAT",
+          "dataType": "double",
+          "sourceColumn": "RRP_excl_VAT",
+          "displayFolder": "Measures",
+          "lineageTag": "440e69f5-d0c2-47b7-953c-fecc94e680b7"
+        },
+        {
+          "name": "RRP incl. VAT",
+          "dataType": "double",
+          "sourceColumn": "RRP_incl_VAT",
+          "displayFolder": "Measures",
+          "lineageTag": "2696fb04-0b5e-4992-a2a2-86fbcb35d236"
+        },
+        {
+          "name": "Inventory Stock Type",
+          "dataType": "string",
+          "sourceColumn": "InventoryStockType",
+          "displayFolder": "References",
+          "lineageTag": "fd668b20-dae3-4690-8efb-9ae47fff16d9"
+        },
+        {
+          "name": "NatStoreDC_Location_Segment_BK",
+          "dataType": "string",
+          "isHidden": true,
+          "sourceColumn": "NatStoreDC_Location_Segment_BK",
+          "displayFolder": "References",
+          "lineageTag": "5f69d9bd-9880-4fcf-a336-a2ff3f759107"
+        },
+        {
+          "name": "Storage Location",
+          "dataType": "string",
+          "sourceColumn": "StorageLocation",
+          "lineageTag": "edbf4d60-6335-4a4b-a4c6-40a6506ca227"
+        },
+        {
+          "name": "SourceSystem",
+          "dataType": "string",
+          "sourceColumn": "SourceSystem",
+          "displayFolder": "References",
+          "lineageTag": "69867f04-63a6-433d-b332-994c32021547"
+        }
+      ],
+      "partitions": [
+        {
+          "name": "vFACT_InventoryHistory_PEG_Current",
+          "source": {
+            "type": "m",
+            "expression": [
+              "let ",
+              "    qry = \"EXEC sourcing.spFACT_InventoryHistory 'PEG','Current'\"",
+              "    ,conn = Sql.Database(Param_Server_Europe_SP, Param_Database_PEG_SP,[CommandTimeout=#duration(0, 0, 80, 0)])",
+              "    ,res = Value.NativeQuery(conn, qry)",
+              "    ,#\"Result\" = res",
+              "in",
+              "    Result"
+            ]
+          }
+        },
+        {
+          "name": "vFACT_InventoryHistory_PEG_DummyPartitionForFullProcessing",
+          "source": {
+            "type": "m",
+            "expression": [
+              "let ",
+              "    qry = \"       SELECT",
+              "            NULL AS BookingDate",
+              "            ,NULL AS ArticleNumber_BK",
+              "            ,NULL AS ArticleSize_BK",
+              "            ,NULL AS NatArticle_BK",
+              "            ,NULL AS StyleNumber_BK",
+              "            ,NULL AS BrandCode",
+              "            ,NULL AS ProductDivisionCode",
+              "            ,NULL AS RBUCode",
+              "            ,NULL AS BusinessSegmentCode",
+              "            ,NULL AS ReportingAgeGroupCode",
+              "            ,NULL AS ReportingGenderCode",
+              "            ,NULL AS ProductCreationModelCode",
+              "            ,NULL AS BusinessClassCode",
+              "            ,NULL AS BusinessTypeCode",
+              "            ,NULL AS InventoryStatusCode",
+              "            ,NULL AS PupMasterId",
+              "            ,NULL AS PDUCode",
+              "            ,NULL AS CurrencyCode",
+              "            ,NULL AS NatStoreDC_BK",
+              "            ,NULL AS StorageLocation",
+              "            ,NULL AS NatStoreDC_Location_Segment_BK",
+              "            ,NULL AS InventoryStockType",
+              "            ,NULL AS InventoryUnits",
+              "            ,NULL AS InventoryGrossValue",
+              "            ,NULL AS InventoryNetValue",
+              "            ,NULL AS RRP_incl_VAT",
+              "            ,NULL AS RRP_excl_VAT",
+              "            ,NULL AS GrossValue",
+              "            ,NULL AS NetRRP",
+              "        WHERE",
+              "            1 = 0 /* empty structure */",
+              "    \"",
+              "    ,conn =Sql.Database(Param_DMServerName, Param_DMDatabaseName)",
+              "    ,res = Value.NativeQuery(conn, qry)",
+              "    ,#\"Result\" = res",
+              "in",
+              "    Result    "
+            ]
+          }
+        },
+        {
+          "name": "vFACT_InventoryHistory_PEG_History",
+          "source": {
+            "type": "m",
+            "expression": [
+              "let ",
+              "    qry = \"EXEC sourcing.spFACT_InventoryHistory 'PEG','History'\"",
+              "    ,conn = Sql.Database(Param_Server_Europe_SP, Param_Database_PEG_SP,[CommandTimeout=#duration(0, 0, 80, 0)])",
+              "    ,res = Value.NativeQuery(conn, qry)",
+              "    ,#\"Result\" = res",
+              "in",
+              "    Result"
+            ]
+          }
+        },
+        {
+          "name": "vFACT_InventoryHistory_PEG_History_CY-1",
+          "source": {
+            "type": "m",
+            "expression": [
+              "let ",
+              "    qry = \"EXEC sourcing.spFACT_InventoryHistory 'PEG','History_CY-1'\"",
+              "    ,conn = Sql.Database(Param_Server_Europe_SP, Param_Database_PEG_SP,[CommandTimeout=#duration(0, 0, 80, 0)])",
+              "    ,res = Value.NativeQuery(conn, qry)",
+              "    ,#\"Result\" = res",
+              "in",
+              "    Result"
+            ]
+          }
+        },
+        {
+          "name": "vFACT_InventoryHistory_PEG_History_CY-2",
+          "source": {
+            "type": "m",
+            "expression": [
+              "let ",
+              "    qry = \"EXEC sourcing.spFACT_InventoryHistory 'PEG','History_CY-2'\"",
+              "    ,conn = Sql.Database(Param_Server_Europe_SP, Param_Database_PEG_SP,[CommandTimeout=#duration(0, 0, 80, 0)])",
+              "    ,res = Value.NativeQuery(conn, qry)",
+              "    ,#\"Result\" = res",
+              "in",
+              "    Result"
+            ]
+          }
+        },
+        {
+          "name": "vFACT_InventoryHistory_DBX_PEG_CY",
+          "source": {
+            "type": "m",
+            "expression": [
+              "let ",
+              "    query = \"SELECT ",
+              "         ArticleNumber_BK",
+              "        ,ArticleSize_BK",
+              "        ,BookingDate",
+              "        ,BrandCode",
+              "        ,BusinessClassCode",
+              "        ,BusinessSegmentCode",
+              "        ,BusinessTypeCode",
+              "        ,CurrencyCode",
+              "        ,InventoryStockType             ",
+              "        ,InventoryStatusCode",
+              "        ,NatArticle_BK",
+              "        ,NatStoreDC_BK",
+              "        ,NatStoreDC_Location_Segment_BK",
+              "        ,PDUCode",
+              "        ,ProductDivisionCode            ",
+              "        ,ProductCreationModelCode",
+              "        ,PupMasterId",
+              "        ,RBUCode",
+              "        ,ReportingAgeGroupCode          ",
+              "        ,ReportingGenderCode           ",
+              "        ,StyleNumber_BK",
+              "        ,StorageLocation                ",
+              "        ,InventoryGrossValue",
+              "        ,InventoryNetValue",
+              "        ,InventoryUnits",
+              "        ,RRP_excl_VAT                   ",
+              "        ,RRP_incl_VAT                  ",
+              "        ,'DBX'                          AS  SourceSystem",
+              "",
+              "  FROM s3_gold.fact_inventory_snapshot_bridge_peg",
+              "  --WHERE BookingDate  >= trunc(current_date(), 'YEAR')",
+              "  WHERE BookingDate  >= DATE '2026-07-28'",
+              "  ",
+              "  ",
+              " \",",
+              "",
+              "    Source = Databricks.Catalogs(ServerHostname_EEMEA, HTTPPath_EEMEA, [Catalog=Catalog_EEMEA]),",
+              "    Database = Source{[Name=Catalog_EEMEA, Kind=\"Database\"]}[Data],",
+              "    Result = Value.NativeQuery(Database, query, null, [EnableFolding = false])",
+              "in",
+              "    Result",
+              "    ",
+              "    ",
+              "   "
+            ]
+          }
+        },
+        {
+          "name": "vFACT_InventoryHistory_PEG",
+          "source": {
+            "type": "m",
+            "expression": [
+              "let",
+              "    CrossBookDate = \"2026-07-28\",",
+              " ",
+              "    qry = \"",
+              "WITH tmp_VAT AS (",
+              "              SELECT CAST('AT' AS NVARCHAR(10)) AS CountryCode, CAST(20  AS DECIMAL(6,2)) AS VAT, CAST('2020-01-01' AS DATE) AS ValidFrom, CAST('9999-12-31' AS DATE) AS ValidTo",
+              "    UNION ALL SELECT 'BE', 21,  '2020-01-02', '9999-12-31'",
+              "    UNION ALL SELECT 'CH', 7.7, '2020-01-03', '9999-12-31'",
+              "    UNION ALL SELECT 'CZ', 21,  '2020-01-04', '9999-12-31'",
+              "    UNION ALL SELECT 'DE', 19,  '2021-01-01', '9999-12-31'",
+              "    UNION ALL SELECT 'DE', 16,  '2020-07-01', '2020-12-31'",
+              "    UNION ALL SELECT 'DK', 25,  '2020-01-01', '9999-12-31'",
+              "    UNION ALL SELECT 'ES', 21,  '2020-01-01', '9999-12-31'",
+              "    UNION ALL SELECT 'FR', 20,  '2020-01-01', '9999-12-31'",
+              "    UNION ALL SELECT 'GB', 20,  '2020-01-01', '9999-12-31'",
+              "    UNION ALL SELECT 'HU', 27,  '2020-01-01', '9999-12-31'",
+              "    UNION ALL SELECT 'IE', 21,  '2020-09-01', '2021-02-28'",
+              "    UNION ALL SELECT 'IE', 23,  '2021-03-01', '9999-12-31'",
+              "    UNION ALL SELECT 'IT', 22,  '2020-01-01', '9999-12-31'",
+              "    UNION ALL SELECT 'NL', 21,  '2020-01-01', '9999-12-31'",
+              "    UNION ALL SELECT 'NO', 25,  '2020-01-01', '9999-12-31'",
+              "    UNION ALL SELECT 'PL', 23,  '2020-01-01', '9999-12-31'",
+              "    UNION ALL SELECT 'PT', 23,  '2020-01-01', '9999-12-31'",
+              "    UNION ALL SELECT 'SE', 25,  '2020-01-01', '9999-12-31'",
+              "),",
+              "tmp_RetailPriceMaster AS (",
+              "    SELECT",
+              "        REPLACE(MaterialNumber,'-',' ') AS ArticleNumber_BK",
+              "        ,ValidFrom",
+              "        ,ValidTo",
+              "        ,Price AS RRP",
+              "        ,Currency",
+              "    FROM biz.S4Hana_RetailPriceMaster",
+              "    WHERE Active = 1",
+              "      AND SourceTable = 'RetPriceMaster901'",
+              "      AND SalesOrganizationCode = 6000",
+              "      AND LEN(MaterialNumber)-LEN(REPLACE(MaterialNumber,'-','')) = 1",
+              "),",
+              "tmp_Articles AS (",
+              "    SELECT DISTINCT",
+              "        art.ArticleNumber AS ArticleNumber_BK",
+              "        ,art.BusinessSegmentCode",
+              "        ,art.IntProdCreationModelCode AS ProductCreationModelCode",
+              "        ,art.RepIntAgeGrpCode AS ReportingAgeGroupCode",
+              "        ,art.ReportingGenderCode AS ReportingGenderCode",
+              "    FROM sourcing.InventoriesHistory inv WITH(NOLOCK)",
+              "    LEFT JOIN ref.vArticles_DL AS art",
+              "           ON inv.ArticleNumber_BK = art.ArticleNumber",
+              "          AND art.SeasonCode = art.LastSeasonCode",
+              "    WHERE inv.PostingDate <= CAST('\" & CrossBookDate & \"' AS DATE)",
+              ")",
+              "SELECT",
+              "     CAST('\" & CrossBookDate & \"' AS DATE)      AS BookingDate",
+              "    ,l.ArticleNumber_BK",
+              "    ,l.ArticleSize_BK",
+              "    ,l.NatArticle_BK",
+              "    ,l.StyleNumber_BK",
+              "    ,l.BrandCode",
+              "    ,l.ProductDivisionCode",
+              "    ,l.RBUCode",
+              "    ,ISNULL(art.BusinessSegmentCode,0)       AS BusinessSegmentCode",
+              "    ,ISNULL(art.ReportingAgeGroupCode,0)     AS ReportingAgeGroupCode",
+              "    ,ISNULL(art.ReportingGenderCode,0)       AS ReportingGenderCode",
+              "    ,ISNULL(art.ProductCreationModelCode,0)  AS ProductCreationModelCode",
+              "    ,10                                      AS BusinessClassCode",
+              "    ,l.BusinessTypeCode",
+              "    ,l.InventoryStatusCode",
+              "    ,l.PupMasterId",
+              "    ,l.PDUCode",
+              "    ,l.CurrencyCode",
+              "    ,l.NatStoreDC_BK",
+              "    ,l.StorageLocation",
+              "    ,l.NatStoreDC_Location_Segment_BK",
+              "    ,l.InventoryStockType",
+              "    /* additive measures - negated */",
+              "    ,SUM(l.InventoryUnits) * -1                              AS InventoryUnits",
+              "    ,CAST(SUM(l.InventoryGrossValue) * -1 AS MONEY)           AS InventoryGrossValue",
+              "    ,CAST(0 AS MONEY)                                        AS InventoryNetValue",
+              "    /* per-unit rates - NOT negated */",
+              "    ,l.RRP                                                   AS RRP_incl_VAT",
+              "    ,l.RRP * (100/(100 + MAX(l.VAT)))                        AS RRP_excl_VAT",
+              "    /* value measures built on units - negated */",
+              "    ,l.RRP * SUM(l.InventoryUnits) * -1                      AS GrossValue",
+              "    ,l.RRP * (100/(100 + MAX(l.VAT))) * SUM(l.InventoryUnits) * -1 AS NetRRP",
+              "    ,'EBP' AS SourceSystem",
+              "FROM",
+              "    (SELECT",
+              "        inv.PostingDate",
+              "        ,CASE WHEN ISNUMERIC(REPLACE(inv.ArticleNumber_BK,' ','')) = 1 THEN inv.ArticleNumber_BK ELSE '000000 00' END AS ArticleNumber_BK",
+              "        ,CASE WHEN ISNUMERIC(REPLACE(inv.ArticleSize_BK,' ','')) = 1 THEN inv.ArticleSize_BK ELSE '000000 00 0' END AS ArticleSize_BK",
+              "        ,inv.NatArticle_BK",
+              "        ,CASE WHEN ISNUMERIC(inv.[StyleNumber_BK])=1 THEN RIGHT(CONCAT('000000',inv.StyleNumber_BK),6) ELSE '000000' END AS StyleNumber_BK",
+              "        ,inv.PDUCode",
+              "        ,inv.IntPupMasterId AS PupMasterId",
+              "        ,CAST(inv.ProdDivCode AS INT) AS ProductDivisionCode",
+              "        ,CAST(inv.RBUCode AS INT) AS RBUCode",
+              "        ,inv.BrandCode",
+              "        ,inv.PriceCurrency AS CurrencyCode",
+              "        ,nsd.CountryCode",
+              "        ,CASE WHEN nsd.IntDCTypeCode = 60 THEN nsd.GSMCode ELSE inv.NatStoreDC_BK END AS NatStoreDC_BK",
+              "        ,CAST(inv.IntInventoryStatusCode AS INT) AS InventoryStatusCode",
+              "        ,CAST(inv.BusinessTypeCode AS INT) AS BusinessTypeCode",
+              "        ,inv.Qty AS InventoryUnits",
+              "        ,inv.Gross AS InventoryGrossValue",
+              "        ,inv.STORAGELOCATION AS StorageLocation",
+              "        ,inv.QTYTYPE AS InventoryStockType",
+              "        ,CONCAT(inv.NatStoreDC_BK,'|',inv.STORAGELOCATION,'|',inv.STOCKSEGMENT) AS NatStoreDC_Location_Segment_BK",
+              "        ,ISNULL(vat.VAT,0) AS VAT",
+              "        ,ISNULL(rpm.RRP,0) AS RRP",
+              "        ",
+              "    FROM",
+              "        sourcing.InventoriesHistory inv WITH(NOLOCK)",
+              "        INNER JOIN ref.NatStoreDCs nsd WITH(NOLOCK)",
+              "                ON nsd.NatStoreDC_BK = inv.NatStoreDC_BK",
+              "        LEFT OUTER JOIN tmp_VAT vat",
+              "                ON nsd.CountryCode = vat.CountryCode",
+              "               AND inv.PostingDate BETWEEN vat.ValidFrom AND vat.ValidTo",
+              "        LEFT OUTER JOIN tmp_RetailPriceMaster rpm",
+              "                ON inv.ArticleNumber_BK = rpm.ArticleNumber_BK",
+              "               AND inv.PostingDate BETWEEN rpm.ValidFrom AND rpm.ValidTo",
+              "    WHERE",
+              "        inv.PostingDate <= CAST('\" & CrossBookDate & \"' AS DATE)  /* NO lower bound - reverses the full accumulated balance */",
+              "    ) l",
+              "    LEFT OUTER JOIN tmp_Articles art",
+              "            ON l.ArticleNumber_BK = art.ArticleNumber_BK",
+              "GROUP BY",
+              "     l.ArticleNumber_BK",
+              "    ,l.ArticleSize_BK",
+              "    ,l.NatArticle_BK",
+              "    ,l.StyleNumber_BK",
+              "    ,l.BrandCode",
+              "    ,l.ProductDivisionCode",
+              "    ,l.RBUCode",
+              "    ,ISNULL(art.BusinessSegmentCode,0)",
+              "    ,ISNULL(art.ReportingAgeGroupCode,0)",
+              "    ,ISNULL(art.ReportingGenderCode,0)",
+              "    ,ISNULL(art.ProductCreationModelCode,0)",
+              "    ,l.BusinessTypeCode",
+              "    ,l.InventoryStatusCode",
+              "    ,l.PupMasterId",
+              "    ,l.PDUCode",
+              "    ,l.CurrencyCode",
+              "    ,l.NatStoreDC_BK",
+              "    ,l.StorageLocation",
+              "    ,l.NatStoreDC_Location_Segment_BK",
+              "    ,l.InventoryStockType",
+              "    ,l.RRP",
+              "HAVING",
+              "    SUM(l.InventoryUnits) <> 0",
+              "\",",
+              "    conn = Sql.Database(Param_Server_Europe_SP, Param_Database_PEG_SP,[CommandTimeout=#duration(0, 0, 80, 0)]),",
+              "    res  = Value.NativeQuery(conn, qry),",
+              "    #\"Result\" = res",
+              "in",
+              "    Result"
+            ]
+          }
+        }
+      ],
+      "annotations": [
+        {
+          "name": "#Marketing_Hidden"
+        }
+      ]
+    }
+  }
+}
