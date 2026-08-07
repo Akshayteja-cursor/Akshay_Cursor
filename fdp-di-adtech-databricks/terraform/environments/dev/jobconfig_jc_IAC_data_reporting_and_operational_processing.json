@@ -1,0 +1,1737 @@
+{
+    "data_reporting_and_operational_processing_daily": {
+        "job_clusters": [
+            {
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "is_single_node": false,
+                "data_security_mode": "SINGLE_USER",
+                "autoscale": {
+                    "min_workers": 2,
+                    "max_workers": 8
+                },
+                "policy_name": null,
+                "spark_version": "15.4.x-scala2.12",
+                "node_type_id": "rgd-fleet.4xlarge",
+                "driver_node_type_id": "rgd-fleet.2xlarge",
+                "aws_attributes": {
+                    "first_on_demand": 1,
+                    "availability": "SPOT_WITH_FALLBACK",
+                    "spot_bid_price_percent": 100
+                },
+                "instance_profile_arn": "arn:aws:iam::742939588079:instance-profile/fng-dmo-prod-databricks-instance-role",
+                "enable_elastic_disk": false,
+                "runtime_engine": "PHOTON",
+                "spark_conf": null,
+                "autotermination_minutes": 5,
+                "cluster_tags": {
+                    "domain_name": "adtech",
+                    "deployed-by": "terraform"
+                }
+            }
+        ],
+        "schedule": "0 0 * ? * *",
+        "pause_status": "PAUSED",
+        "timezone_id": "UTC",
+        "job_tags": {
+            "team": "adtech",
+            "domain_name": "adtech"
+        },
+        "tasks": [
+            {
+                "task_name": "config",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/config",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {},
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    }
+                ]
+            },
+            {
+                "task_name": "freeWheel_aud_metadata",
+                "depends_on": [
+                    "config"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/freewheel_report_download",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "report": "aud_metadata"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "paramiko"
+                    }
+                ]
+            },
+            {
+                "task_name": "freewheel_billing",
+                "depends_on": [
+                    "config"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/freewheel_report_download",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "report": "billing"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "paramiko"
+                    }
+                ]
+            },
+            {
+                "task_name": "freewheel_daily_m",
+                "depends_on": [
+                    "config"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/freewheel_report_download",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "report": "daily_m"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "paramiko"
+                    }
+                ]
+            },
+            {
+                "task_name": "freewheel_daily_pm",
+                "depends_on": [
+                    "config"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/freewheel_report_download",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "report": "daily_pm"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "paramiko"
+                    }
+                ]
+            },
+            {
+                "task_name": "freewheel_demo_daily",
+                "depends_on": [
+                    "config"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/freewheel_report_download",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "report": "demo_daily"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "paramiko"
+                    }
+                ]
+            },
+            {
+                "task_name": "freewheel_demo_monthly",
+                "depends_on": [
+                    "config"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/freewheel_report_download",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "report": "demo_monthly"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "paramiko"
+                    }
+                ]
+            },
+            {
+                "task_name": "freewheel_lifetime",
+                "depends_on": [
+                    "config"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/freewheel_report_download",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "report": "lifetime"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "paramiko"
+                    }
+                ]
+            },
+            {
+                "task_name": "freewheel_metadata",
+                "depends_on": [
+                    "config"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/freewheel_report_download",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "report": "metadata"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "paramiko"
+                    }
+                ]
+            },
+            {
+                "task_name": "freewheel_monthly",
+                "depends_on": [
+                    "config"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/freewheel_report_download",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "report": "monthly"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "paramiko"
+                    }
+                ]
+            },
+            {
+                "task_name": "freewheel_programmatic",
+                "depends_on": [
+                    "config"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/freewheel_report_download",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "report": "programmatic"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "paramiko"
+                    }
+                ]
+            },
+            {
+                "task_name": "freewheel_pg_lifetime_delivery_data_load",
+                "depends_on": [
+                    "freewheel_programmatic"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/freewheel_programmatic_data_load",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {},
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    }
+                ]
+            },
+            {
+                "task_name": "magnite_lifetime_delivery_data_load",
+                "depends_on": [
+                    "config"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/magnite_data_load",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {},
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    }
+                ]
+            },
+            {
+                "task_name": "operative_data_load",
+                "depends_on": [
+                    "config"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/operative_data_load",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {},
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "googleads"
+                    }
+                ]
+            },
+            {
+                "task_name": "adops_lifetime_delivery_data_load",
+                "depends_on": [
+                    "operative_data_load",
+                    "freewheel_lifetime",
+                    "freewheel_demo_daily",
+                    "freewheel_demo_monthly",
+                    "freewheel_pg_lifetime_delivery_data_load",
+                    "magnite_lifetime_delivery_data_load"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/ad_operations_lifetime_delivery_data_load",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {},
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "googleads"
+                    }
+                ]
+            },
+            {
+                "task_name": "pacing_report",
+                "depends_on": [
+                    "adops_lifetime_delivery_data_load"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/pacing_report",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {},
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "googleads"
+                    }
+                ]
+            },
+            {
+                "task_name": "send_pacing_report",
+                "depends_on": [
+                    "pacing_report"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/send_email",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "report": "pacing"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "googleads"
+                    }
+                ]
+            },
+            {
+                "task_name": "billing_adjustment_report",
+                "depends_on": [
+                    "operative_data_load",
+                    "freewheel_demo_daily",
+                    "freewheel_demo_monthly",
+                    "freewheel_billing",
+                    "freewheel_pg_lifetime_delivery_data_load",
+                    "magnite_lifetime_delivery_data_load"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/billing_adjustment_report",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {},
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "googleads"
+                    }
+                ]
+            },
+            {
+                "task_name": "send_billing_adjustment_report",
+                "depends_on": [
+                    "billing_adjustment_report"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/send_email",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "report": "bar"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "googleads"
+                    }
+                ]
+            },
+            {
+                "task_name": "staq_update_daily_breakouts",
+                "depends_on": [
+                    "operative_data_load"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/staq_update_daily_breakouts",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {},
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "googleads"
+                    }
+                ]
+            },
+            {
+                "task_name": "news_gam_1P_data_load",
+                "depends_on": [
+                    "operative_data_load"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/gam_1P_data_load",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "report_id": "14696010689",
+                    "instance": "News",
+                    "full_year_load": "false"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "googleads"
+                    }
+                ]
+            },
+            {
+                "task_name": "sports_gam_1P_data_load",
+                "depends_on": [
+                    "operative_data_load"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/gam_1P_data_load",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "report_id": "17447258685",
+                    "instance": "Sports",
+                    "full_year_load": "false"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "googleads"
+                    }
+                ]
+            },
+            {
+                "task_name": "adops_news_lifetime_delivery_data_load",
+                "depends_on": [
+                    "news_gam_1P_data_load",
+                    "sports_gam_1P_data_load",
+                    "adops_lifetime_delivery_data_load"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/ad_operations_news_lifetime_data_load",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "amperwave_delta_table": "fox_bi_qa.gold_ad_sales.ft_amperwave_campaign_delivery",
+                    "megaphone_delta_table": "fox_bi_qa.gold_ad_sales.ft_megaphone_campaign_delivery"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    }
+                ]
+            },
+            {
+                "task_name": "send_news_pacing_report",
+                "depends_on": [
+                    "adops_news_lifetime_delivery_data_load"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/send_email",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "report": "news_pacing"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "googleads"
+                    }
+                ]
+            },
+            {
+                "task_name": "adops_daily_delivery_data_load",
+                "depends_on": [
+                    "operative_data_load",
+                    "freewheel_daily_m",
+                    "freewheel_daily_pm",
+                    "freewheel_demo_daily",
+                    "freewheel_demo_monthly",
+                    "staq_update_daily_breakouts"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/ad_operations_daily_delivery_data_load",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "source": "AOS"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "googleads"
+                    }
+                ]
+            },
+            {
+                "task_name": "operative_billing_1p",
+                "depends_on": [
+                    "adops_daily_delivery_data_load",
+                    "freewheel_pg_lifetime_delivery_data_load",
+                    "magnite_lifetime_delivery_data_load"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/operative_billing_data_load",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "source": "AOS",
+                    "type": "1p"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    }
+                ]
+            },
+            {
+                "task_name": "operative_billing_3p",
+                "depends_on": [
+                    "adops_daily_delivery_data_load",
+                    "freewheel_pg_lifetime_delivery_data_load",
+                    "magnite_lifetime_delivery_data_load"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/operative_billing_data_load",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "source": "AOS",
+                    "type": "3p"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    }
+                ]
+            },
+            {
+                "task_name": "operative_ingestion_upload_1p",
+                "depends_on": [
+                    "operative_billing_1p"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/operative_ingestion_upload",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "type": "1p"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    }
+                ]
+            },
+            {
+                "task_name": "operative_ingestion_upload_3p",
+                "depends_on": [
+                    "operative_billing_3p"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/operative_ingestion_upload",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "type": "3p"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    }
+                ]
+            },
+            {
+                "task_name": "foxai_daily_feed",
+                "depends_on": [
+                    "adops_daily_delivery_data_load"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/fox_ai_daily_feed",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "action": "export_daily_feed"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    }
+                ]
+            },
+            {
+                "task_name": "foxai_lifetime_feed",
+                "depends_on": [
+                    "foxai_daily_feed"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/fox_ai_daily_feed",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "action": "export_lifetime_feed"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    }
+                ]
+            },
+            {
+                "task_name": "executive_summary_report",
+                "depends_on": [
+                    "adops_lifetime_delivery_data_load",
+                    "freewheel_monthly"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/executive_summary_report",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {},
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "googleads"
+                    }
+                ]
+            },
+            {
+                "task_name": "send_executive_summary_report",
+                "depends_on": [
+                    "executive_summary_report"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/send_email",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "report": "executive_summary"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "googleads"
+                    }
+                ]
+            },
+            {
+                "task_name": "executive_summary_lifetime_report",
+                "depends_on": [
+                    "adops_lifetime_delivery_data_load"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/executive_summary_lifetime_report",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {},
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    }
+                ]
+            },
+            {
+                "task_name": "audit_report_ad_operations",
+                "depends_on": [
+                    "operative_data_load",
+                    "freeWheel_aud_metadata",
+                    "freewheel_metadata"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/audit_report",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "report": "adops"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "googleads"
+                    }
+                ]
+            },
+            {
+                "task_name": "send_audit_report_ad_operations",
+                "depends_on": [
+                    "audit_report_ad_operations"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/send_email",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "report": "adops_audit"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "googleads"
+                    }
+                ]
+            },
+            {
+                "task_name": "audit_report_client_services",
+                "depends_on": [
+                    "operative_data_load",
+                    "freeWheel_aud_metadata",
+                    "freewheel_metadata"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/audit_report",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "report": "cs"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "googleads"
+                    }
+                ]
+            },
+            {
+                "task_name": "send_audit_report_client_services",
+                "depends_on": [
+                    "audit_report_client_services"
+                ],
+                "run_if": "ALL_SUCCESS",
+                "task_type": "notebook_task",
+                "notebook_path": "/Workspace/Repos/adtech/fdp-di-adtech-databricks/src/dev/data_reporting_and_operational_processing/send_email",
+                "job_cluster_key": "jc_bi_adtech_data_reporting_and_operational_processing",
+                "base_parameters": {
+                    "report": "client_services_audit"
+                },
+                "libraries": [
+                    {
+                        "library_source": "pypi",
+                        "package": "awscli"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "boto3==1.40.49"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "s3fs"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses-json"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "dataclasses"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "XlsxWriter"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "openpyxl"
+                    },
+                    {
+                        "library_source": "pypi",
+                        "package": "googleads"
+                    }
+                ]
+            }
+        ]
+    }
+}
