@@ -43,52 +43,94 @@ def find_staq_file(report_date: datetime) -> str:
 # COMMAND ----------
 
 def apply_pg_billing_news(df: pd.DataFrame, report_date: datetime) -> pd.DataFrame:
+    """Overlay Freewheel PG lifetime delivery onto News PG invoice orgs.
+
+    News pacing reads a thin column set from AdOps_Reporting_Lifetime_Delivery
+    (unlike the main lifetime job), so this path must not assume PG / parent /
+    pacing columns already exist on the frame.
+    """
     global drop_bucket
     s3_dir = f's3://{drop_bucket}/'
     fw_pg_filename = 'FW_PG_Lifetime_Delivery.parquet'
     fw_pg_file = s3_dir + 'processed/' + fw_pg_filename
 
+    if 'Placement ID' not in df.columns:
+        raise KeyError(
+            "Placement ID is required to join FW_PG_Lifetime_Delivery.parquet "
+            "for News Freewheel PG billing"
+        )
+
+    # Thin news read never includes PG Impressions; ignore if already present
+    # from a prior lifetime overlay so the FW PG merge can re-apply cleanly.
+    df = df.drop(columns=['PG Impressions'], errors='ignore')
+
     pg_billing = pd.read_parquet(fw_pg_file, storage_options={'profile': aws_profile})
 
     pg_billing.drop(['Event Date'], axis=1, inplace=True)
 
-    pg_billing = pg_billing.groupby(['Deal ID']).sum()
+    pg_billing = pg_billing.groupby(['Deal ID']).sum().reset_index()
 
     pg_billing = pg_billing.rename({'Net Counted Ads': 'PG Impressions'}, axis=1)
 
     df = pd.merge(df, pg_billing, how='left', left_on='Placement ID', right_on='Deal ID')
 
+    # Only News Programmatic orgs get FW PG overlay. Regular News/Outkick/TMZ
+    # must keep AdOps Gross/Net Counted Ads (prod news path does not wipe them).
+    news_pg_orgs = {
+        'FOX News & Business Programmatic',
+        'FOX News & Business Programmatic - GAM',
+    }
+
     def is_pg_deal(row: pd.Series) -> bool:
-        if row['Invoice Organization Name'] in {'FOX News & Business', 'FOX News & Business Programmatic', 'FOX News & Business Programmatic - GAM', 'Outkick', 'TMZ and TooFab'}:
-            return True
-        return False
-    
+        return row['Invoice Organization Name'] in news_pg_orgs
+
+    if 'Programmatic Type' not in df.columns:
+        df['Programmatic Type'] = None
+    if 'Billable Metric' not in df.columns:
+        df['Billable Metric'] = None
+
     def billable_metric(row: pd.Series) -> str:
-        if row['is_pg_deal'] and row['Sales Order Name'] is not None and 'evergreen' in row['Sales Order Name'].lower():
+        sales_order = row['Sales Order Name']
+        prog_type = row['Programmatic Type']
+        invoice_org = row['Invoice Organization Name']
+        if row['is_pg_deal'] and isinstance(sales_order, str) and 'evergreen' in sales_order.lower():
             return 'Programmatic Reseller Imps'
-        if row['is_pg_deal'] and row['Programmatic Type'] is not None and 'programmatic guaranteed' in row['Programmatic Type'].lower():
+        if row['is_pg_deal'] and isinstance(prog_type, str) and 'programmatic guaranteed' in prog_type.lower():
             return "Programmatic Guaranteed Imps"
-        if row['is_pg_deal'] and row['Invoice Organization Name'] is not None and 'programmatic guaranteed' in row['Invoice Organization Name'].lower():
+        if row['is_pg_deal'] and isinstance(invoice_org, str) and 'programmatic guaranteed' in invoice_org.lower():
             return "Programmatic Guaranteed Imps"
         return row['Billable Metric']
-    
+
     df.loc[:, 'is_pg_deal'] = df.apply(is_pg_deal, axis=1)
 
     df.loc[:, 'Billable Metric'] = df.apply(billable_metric, axis=1)
 
-    pg_df = df[df['is_pg_deal'] == True]
+    pg_df = df[df['is_pg_deal'] == True].copy()
+    other_df = df[df['is_pg_deal'] == False].copy()
 
-    other_df = df[df['is_pg_deal'] == False]
+    # Only overwrite when FW PG delivery matched; leave unmatched PG rows alone
+    has_pg = pg_df['PG Impressions'].notna()
+    pg_df.loc[has_pg, '1P Imps'] = pg_df.loc[has_pg, 'PG Impressions']
+    pg_df.loc[has_pg, 'Net Counted Ads'] = pg_df.loc[has_pg, 'PG Impressions']
+    pg_df.loc[has_pg, 'Gross Counted Ads'] = pg_df.loc[has_pg, 'PG Impressions']
+    pg_df.loc[has_pg, 'No Delivery'] = pg_df.loc[has_pg, 'PG Impressions'] == 0
+    pg_df.loc[has_pg, 'Billable Quantity'] = pg_df.loc[has_pg, 'PG Impressions']
+    if 'Launch Flight %' in pg_df.columns:
+        pg_df.loc[has_pg, 'Pacing %'] = (
+            pg_df.loc[has_pg, 'Billable Quantity']
+            / pg_df.loc[has_pg, 'Quantity']
+            / pg_df.loc[has_pg, 'Launch Flight %']
+        )
+    pg_df.loc[has_pg, 'Earned Revenue'] = (
+        pg_df.loc[has_pg, 'Net Unit Cost'] * pg_df.loc[has_pg, 'Billable Quantity'] / 1000
+    )
+    pg_df.drop(
+        ['Parent Line Item Total', 'Parent Line Item Run Rate', 'Parent Line Item Earned Revenue'],
+        inplace=True,
+        axis=1,
+        errors='ignore',
+    )
 
-    pg_df.loc[:, '1P Imps'] = pg_df['PG Impressions']
-    pg_df.loc[:, 'Net Counted Ads'] = pg_df['PG Impressions']
-    pg_df.loc[:, 'Gross Counted Ads'] = pg_df['PG Impressions']
-    pg_df.loc[:, 'No Delivery'] = pg_df['PG Impressions'] == 0
-    pg_df.loc[:, 'Billable Quantity'] = pg_df['PG Impressions']
-    pg_df.loc[:, 'Pacing %'] = pg_df['Billable Quantity'] / pg_df['Quantity'] / pg_df['Launch Flight %']
-    pg_df.loc[:, 'Earned Revenue'] = pg_df['Net Unit Cost'] * pg_df['Billable Quantity']/1000
-    pg_df.drop(['Parent Line Item Total', 'Parent Line Item Run Rate', 'Parent Line Item Earned Revenue'], inplace=True, axis=1)
-    
     df = pd.concat([other_df, pg_df])
 
     df.fillna(
@@ -414,6 +456,7 @@ def news_lifetime_delivery(ad_juster_pacing_news: str, report_date: datetime) ->
     op_fw_adj = pd.read_parquet(
         adops_lifetime,
         columns=[
+            'Placement ID',  # required to join FW_PG_Lifetime_Delivery (Deal ID)
             'Sales Line Item ID',
             'Invoice Organization Name',
             'Advertiser Name',
@@ -469,8 +512,8 @@ def news_lifetime_delivery(ad_juster_pacing_news: str, report_date: datetime) ->
     gam = read_gam_lifetime(gam_file, sports_gam_file, op_oms)
     adjuster_news = read_adjuster_news(ad_juster_pacing_news, op_oms, skiprows=0)
 
-    # Append PG freewheel data
-    op_fw_adj = apply_pg_billing_news(op_fw_adj.drop(columns=['PG Impressions'], axis=1), report_date)
+    # Append PG freewheel data (drop is inside apply_pg_billing_news; thin read has no PG Impressions)
+    op_fw_adj = apply_pg_billing_news(op_fw_adj, report_date)
 
     ###########################################################################
     # Write the processed into its own year file
